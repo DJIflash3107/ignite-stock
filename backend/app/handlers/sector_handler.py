@@ -5,8 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.responses import empty_response, list_response, success_response
 from app.helpers.schemas import PaginationParams, SectorCreate, SectorRead, SectorUpdate
-from app.services import sector_service
+from app.services import sector_service, sectors_service
 from app.services.base import payload
+
+
+async def list_external_subsectors() -> JSONResponse:
+    data = await sectors_service.list_subsectors()
+    return success_response("subsectors retrieved", "subsectors", data)
 
 
 async def list_sectors(

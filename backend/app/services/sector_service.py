@@ -23,6 +23,10 @@ async def list_sectors(
         raise DatabaseError() from exc
 
 
+async def get_sector_by_id(db: AsyncSession, sector_id: UUID) -> Sector:
+    return await get_sector(db, sector_id)
+
+
 async def get_sector(db: AsyncSession, sector_id: UUID) -> Sector:
     try:
         sector = await db.get(Sector, sector_id)

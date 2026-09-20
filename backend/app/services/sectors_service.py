@@ -1,0 +1,98 @@
+import asyncio
+import time
+from collections.abc import Awaitable, Callable
+from datetime import date
+from typing import Any, TypeVar
+
+from app.configs.settings import get_settings
+from app.helpers.exceptions import SectorsInvalidResponseError
+from app.helpers.schemas import SectorsSubsectorRead
+from app.services.sectors_api_client import (
+    fetch_company_report,
+    fetch_idx_total,
+    fetch_index_daily,
+    fetch_subsector_report,
+    fetch_subsectors,
+    fetch_top_changes,
+)
+
+T = TypeVar("T")
+_cache: dict[str, tuple[float, Any]] = {}
+_cache_lock = asyncio.Lock()
+
+
+async def _cached(key: str, fetcher: Callable[[], Awaitable[T]]) -> T:
+    settings = get_settings()
+    cached = _cache.get(key)
+    if cached and time.monotonic() - cached[0] < settings.sectors_api_cache_ttl_seconds:
+        return cached[1]
+
+    async with _cache_lock:
+        cached = _cache.get(key)
+        if cached and time.monotonic() - cached[0] < settings.sectors_api_cache_ttl_seconds:
+            return cached[1]
+        value = await fetcher()
+        if settings.sectors_api_cache_ttl_seconds > 0:
+            _cache[key] = (time.monotonic(), value)
+        return value
+
+
+def _cache_key(name: str, **params: Any) -> str:
+    return "|".join([name, *(f"{key}={params[key]}" for key in sorted(params))])
+
+
+def _normalize_subsectors(payload: list[dict[str, Any]]) -> list[SectorsSubsectorRead]:
+    normalized: list[SectorsSubsectorRead] = []
+    for index, item in enumerate(payload):
+        if not isinstance(item, dict):
+            raise SectorsInvalidResponseError(f"Sectors API returned invalid subsector item at index {index}")
+        try:
+            normalized.append(SectorsSubsectorRead.model_validate(item))
+        except ValueError as exc:
+            raise SectorsInvalidResponseError(f"Sectors API returned invalid subsector item at index {index}") from exc
+    return normalized
+
+
+async def list_subsectors() -> list[SectorsSubsectorRead]:
+    return await _cached("subsectors", async_normalize_subsectors)
+
+
+async def async_normalize_subsectors() -> list[SectorsSubsectorRead]:
+    return _normalize_subsectors(await fetch_subsectors())
+
+
+async def get_idx_total(start: date, end: date) -> list[dict[str, Any]]:
+    return await _cached(
+        _cache_key("idx-total", start=start.isoformat(), end=end.isoformat()),
+        lambda: fetch_idx_total(start, end),
+    )
+
+
+async def get_index_daily(date_value: date | None = None) -> list[dict[str, Any]]:
+    return await _cached(
+        _cache_key("index-daily", date=date_value.isoformat() if date_value else ""),
+        lambda: fetch_index_daily(date_value),
+    )
+
+
+async def get_top_changes(periods: str, classifications: str, n_stock: int, sub_sector: str | None = None, min_mcap_billion: int | None = None) -> dict[str, Any]:
+    return await _cached(
+        _cache_key("top-changes", periods=periods, classifications=classifications, n_stock=n_stock, sub_sector=sub_sector or "", min_mcap_billion=min_mcap_billion if min_mcap_billion is not None else ""),
+        lambda: fetch_top_changes(periods, classifications, n_stock, sub_sector, min_mcap_billion),
+    )
+
+
+async def get_subsector_report(sub_sector: str, sections: str) -> dict[str, Any]:
+    return await _cached(_cache_key("subsector-report", sub_sector=sub_sector, sections=sections), lambda: fetch_subsector_report(sub_sector, sections))
+
+
+async def get_company_report(symbol: str, sections: str) -> dict[str, Any]:
+    return await _cached(_cache_key("company-report", symbol=symbol, sections=sections), lambda: fetch_company_report(symbol, sections))
+
+
+def clear_subsectors_cache() -> None:
+    _cache.clear()
+
+
+def clear_cache() -> None:
+    _cache.clear()

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working in this repository.
 
 ## Repository layout
 
@@ -11,79 +11,67 @@ IgniteStock is a two-part app:
 
 Backend runtime starts at `backend/app/main.py`. It loads settings, logging, CORS, request middleware, centralized exception handlers, and the `/api` router. Root and `/health` return the standard success response.
 
-Backend request flow:
+Frontend currently has one route (`/`) rendered through `frontend/src/App.tsx` and `frontend/src/pages/index.tsx`; `frontend/src/main.tsx` mounts React and `frontend/src/index.css` loads Tailwind. Ignore dependency-generated files under `frontend/node_modules/` when exploring or editing source.
 
-1. Route modules in `backend/app/routes/` define HTTP paths, typed body/query/path parameters, and dependencies.
-2. Handlers in `backend/app/handlers/` coordinate request data, service calls, ORM-to-read-schema conversion, and response helpers.
-3. Services in `backend/app/services/` own SQLAlchemy queries, transactions, authentication behavior, and domain errors.
-4. Models in `backend/app/models/` define SQLAlchemy tables. `backend/app/models/__init__.py` imports every model so all tables register on `Base.metadata`.
-5. Pydantic request/read schemas live in `backend/app/helpers/schemas.py`.
-6. `backend/app/helpers/responses.py` defines success/list/empty/error response shapes. `backend/app/middlewares/error_handlers.py` converts validation, application, SQLAlchemy, HTTP, and unexpected errors into the standard error shape.
+## Backend architecture
 
-Services intentionally contain CRUD logic directly; do not reintroduce a generic `CrudService`. Use `backend/app/services/base.py` only for the shared `payload()` helper, including `metadata` to `meta_data` mapping for the SQLAlchemy `Message` model.
+Request flow is `routes -> handlers -> services -> models/database`:
 
-Authentication uses bearer tokens. `get_current_user` in `backend/app/helpers/dependencies.py` decodes the token and loads the user through `user_service.current_user`. Most non-auth routes require this dependency at router level.
+- Routes define paths, dependencies, and request schemas. Router-level `Depends(get_current_user)` protects most non-auth endpoints.
+- Handlers coordinate service calls, convert ORM objects to Pydantic read schemas, and create standard responses. Keep HTTP/client orchestration out of handlers.
+- Services own CRUD queries, transactions, authentication behavior, domain validation, and domain errors. Existing CRUD services are intentionally explicit; do not introduce a generic CRUD abstraction.
+- `backend/app/helpers/schemas.py` contains Pydantic v2 request and response models. `helpers/responses.py` owns JSON envelopes; `middlewares/error_handlers.py` maps validation, `AppError`, SQLAlchemy, HTTP, and unexpected failures into the standard error shape.
+- `backend/app/models/__init__.py` imports all models so SQLAlchemy metadata includes every table. Alembic uses that metadata for migrations.
+
+Sectors integration lives in `services/sectors_api_client.py` (external HTTP), `services/sectors_service.py` (normalization and process-local TTL cache), and `services/market_intelligence_service.py` (market orchestration and comparisons). Market routes must use those layers and must not call Sectors directly. Sectors failures propagate as `AppError` subclasses; never add mock, fabricated, or fallback business data.
+
+The Sectors API uses raw API-key authentication in the `Authorization` header. `/v2/index-daily/` accepts only the optional `date` query parameter; it does not accept `start` or `end`. `/v2/idx-total/` accepts bounded `start`/`end` ranges. Cache only successful responses and keep API-credit-expensive requests bounded.
+
+Authentication uses bearer tokens. `get_current_user` in `backend/app/helpers/dependencies.py` decodes the token and loads the user through `user_service.current_user`.
+
+## API surface added by market intelligence
+
+Authenticated endpoints:
+
+- `GET /api/market/overview`
+- `GET /api/market/movers`
+- `GET /api/market/sectors/{sector_id}`
+- `GET /api/companies/{ticker}/market-context`
+
+The company market-context route must stay before `GET /api/companies/{company_id}` so FastAPI does not treat `market-context` as a UUID. Preserve existing CRUD paths and authentication.
+
+## Configuration and migrations
+
+Backend environment loading uses `backend/.env`; `backend/.env.example` documents MySQL, JWT, CORS, database URLs, and Sectors settings (`SECTORS_API_BASE_URL`, `SECTORS_API_KEY`, `SECTORS_API_TIMEOUT_SECONDS`, `SECTORS_API_CACHE_TTL_SECONDS`). `DATABASE_URL` is async (`mysql+asyncmy`), while Alembic uses `DATABASE_SYNC_URL` (`mysql+pymysql`). If sync URL is omitted, settings derive it from the async URL.
+
+Frontend `.env.example` is currently empty; do not assume a frontend API URL exists until one is added.
 
 Alembic lives under `backend/alembic/`. `backend/alembic/env.py` loads `Settings.sync_database_url` and uses `Base.metadata` for autogenerate. Keep migration revisions in `backend/alembic/versions/`; inspect autogenerated files before applying them. Empty template revisions do not create tables.
 
-## Backend setup and commands
+## Tests and verification
 
-Run backend commands from `backend/` so `.env` and `alembic.ini` resolve correctly:
+Backend tests are under `backend/tests/` and use pytest/AnyIO with mocked `httpx` transports for Sectors calls. Mock transport data is test-only and must never become runtime fallback data.
+
+Run from repository root:
+
+```powershell
+python -m compileall -q backend/app backend/tests
+$env:PYTHONPATH="backend"; pytest -q backend/tests
+$env:PYTHONPATH="backend"; pytest -q backend/tests/test_sectors_integration.py::test_success_is_cached_for_concurrent_requests
+python backend/tests/self_check.py
+```
+
+Run backend API from `backend/`:
 
 ```powershell
 cd C:\Important\ignite-stock\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
-
-Create `.env` from `.env.example`, then configure MySQL. `CORS_ORIGINS` is comma-separated, for example:
-
-```env
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-```
-
-Settings use `NoDecode` plus a validator for this CSV format.
-
-Run API:
-
-```powershell
 uvicorn app.main:app --reload
 ```
 
-Run the lightweight self-check from repository root:
-
-```powershell
-python backend/tests/self_check.py
-```
-
-Compile-check backend source:
-
-```powershell
-python -m compileall -q backend/app
-```
-
-There is no configured backend formatter, linter, or pytest suite currently. If adding tests, place them under `backend/tests/` and run one test with:
-
-```powershell
-pytest backend/tests/test_file.py::test_name
-```
-
-## Alembic workflow
-
-Ensure MySQL database exists and `.env` points to it. Run from `backend/`:
-
-```powershell
-alembic current
-alembic heads
-alembic history
-alembic revision --autogenerate -m "describe schema change"
-alembic upgrade head
-```
-
-Review autogenerated `upgrade()` and `downgrade()` before `alembic upgrade head`. `alembic revision -m` without `--autogenerate` creates an empty template by design. If Alembic reports `Target database is not up to date`, inspect `alembic current` and apply pending revisions before creating another autogenerated revision. Use `alembic stamp head` only when database schema already exactly matches migration metadata.
-
-## Frontend setup and commands
+There is no separate backend formatter or linter configured. Use `python -m compileall` plus pytest for backend checks. For a single test, use `pytest path/to/test_file.py::test_name`.
 
 Run frontend commands from `frontend/`:
 
@@ -96,10 +84,14 @@ pnpm lint
 pnpm preview
 ```
 
-Frontend currently has one route (`/`) rendering `src/pages/index.tsx` through `src/App.tsx`. `src/main.tsx` mounts the app and `src/index.css` imports Tailwind. Use the existing pnpm lockfile and package scripts.
+Alembic commands run from `backend/`:
 
-## Configuration notes
+```powershell
+alembic current
+alembic heads
+alembic history
+alembic revision --autogenerate -m "describe schema change"
+alembic upgrade head
+```
 
-Backend environment loading uses `backend/.env`; `.env.example` documents MySQL, JWT, CORS, and database URL settings. `DATABASE_URL` is async (`mysql+asyncmy`), while Alembic uses `DATABASE_SYNC_URL` (`mysql+pymysql`). If sync URL is omitted, settings derive it from the async URL.
-
-Frontend `.env.example` is currently empty; do not assume a frontend API URL exists until one is added.
+Review autogenerated `upgrade()` and `downgrade()` before applying. `alembic revision -m` without `--autogenerate` creates an empty template. If Alembic reports `Target database is not up to date`, inspect `alembic current` and apply pending revisions before creating another revision. Use `alembic stamp head` only when the database schema exactly matches migration metadata.

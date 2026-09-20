@@ -1,9 +1,9 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 from app.models.enums import ConfidenceLevel, DriverType, EvidenceType, ImpactLevel, InvestigationStatus, InvestigationType, MessageRole, ToolCallStatus
 
@@ -76,6 +76,11 @@ class SectorRead(SectorCreate, OrmSchema):
     updated_at: datetime
 
 
+class SectorsSubsectorRead(BaseModel):
+    sector: str = Field(min_length=1)
+    subsector: str = Field(min_length=1)
+
+
 class CompanyCreate(BaseModel):
     ticker: str = Field(min_length=1, max_length=32)
     name: str = Field(min_length=1, max_length=255)
@@ -98,6 +103,107 @@ class CompanyRead(CompanyCreate, OrmSchema):
     id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class MarketOverviewQuery(BaseModel):
+    start: date | None = None
+    end: date | None = None
+    index_code: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_index_code(cls, value: str | None) -> str | None:
+        return value.upper() if value else value
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        self.resolved_dates()
+        return self
+
+    def resolved_dates(self) -> tuple[date, date]:
+        resolved_end = self.end or date.today()
+        resolved_start = self.start or resolved_end - timedelta(days=30)
+        if resolved_start < date(2021, 1, 1):
+            raise ValueError("start must not be earlier than 2021-01-01")
+        if resolved_end > date.today():
+            raise ValueError("end must not be in the future")
+        if resolved_start > resolved_end:
+            raise ValueError("start must not be after end")
+        if (resolved_end - resolved_start).days > 90:
+            raise ValueError("date range must not exceed 90 days")
+        return resolved_start, resolved_end
+
+
+class MarketMoversQuery(BaseModel):
+    period: str = Field(default="1d", pattern="^(1d|7d|14d|30d|365d)$")
+    classification: str = Field(default="top_gainers,top_losers")
+    limit: int = Field(default=5, ge=1, le=10)
+    sub_sector: str | None = Field(default=None, min_length=1, max_length=128)
+    min_mcap_billion: int | None = Field(default=None, ge=0)
+
+    @field_validator("classification")
+    @classmethod
+    def validate_classification(cls, value: str) -> str:
+        choices = {item.strip() for item in value.split(",") if item.strip()}
+        if not choices or not choices.issubset({"top_gainers", "top_losers"}):
+            raise ValueError("classification must contain top_gainers and/or top_losers")
+        return ",".join(item for item in ("top_gainers", "top_losers") if item in choices)
+
+    @field_validator("sub_sector")
+    @classmethod
+    def normalize_sub_sector(cls, value: str | None) -> str | None:
+        return value.strip().lower() if value else value
+
+
+class MarketPeerQuery(BaseModel):
+    peer_limit: int = Field(default=5, ge=1, le=20)
+
+
+class MarketMoverRead(BaseModel):
+    classification: str
+    period: str
+    ticker: str
+    company_name: str
+    price_change: Decimal
+    last_close_price: Decimal
+    latest_close_date: date
+
+
+class MarketCapPointRead(BaseModel):
+    date: date
+    idx_total_market_cap: Decimal
+
+
+class IndexCloseRead(BaseModel):
+    index_code: str = Field(min_length=1)
+    date: date
+    price: Decimal
+
+
+class MarketOverviewRead(BaseModel):
+    start: date
+    end: date
+    market_cap_series: list[MarketCapPointRead]
+    market_cap_change: dict[str, Decimal | None]
+    index_series: list[IndexCloseRead]
+
+
+class SectorPerformanceRead(BaseModel):
+    sector_id: UUID
+    sector_code: str
+    sector_name: str
+    subsector: str
+    report: dict[str, Any]
+
+
+class CompanyMarketContextRead(BaseModel):
+    ticker: str
+    company_name: str
+    overview: dict[str, Any]
+    valuation: dict[str, Any]
+    market_comparison: dict[str, Decimal | None]
+    sector_comparison: dict[str, Decimal | None]
+    peers: list[dict[str, Any]]
 
 
 class IndexCreate(BaseModel):

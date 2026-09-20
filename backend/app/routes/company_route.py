@@ -1,18 +1,36 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends
-from app.helpers.dependencies import DbSession, get_current_user
-from app.helpers.schemas import PaginationParams, CompanyCreate, CompanyUpdate
+
 from app.handlers.company_handler import (
-    list_companies,
-    get_company,
     create_company,
-    update_company,
     delete_company,
+    get_company,
+    list_companies,
+    update_company,
 )
+from app.handlers.market_handler import get_company_market_context
+from app.helpers.dependencies import DbSession, get_current_user
+from app.helpers.exceptions import ValidationAppError
+from app.helpers.schemas import CompanyCreate, CompanyUpdate, PaginationParams
+
+
+MAX_PEER_LIMIT = 20
+
+
+def _validated_peer_limit(peer_limit: int) -> int:
+    if peer_limit < 1 or peer_limit > MAX_PEER_LIMIT:
+        raise ValidationAppError({"peer_limit": "peer_limit must be between 1 and 20"})
+    return peer_limit
 
 router = APIRouter(
     prefix="/companies", tags=["companies"], dependencies=[Depends(get_current_user)]
 )
+
+
+@router.get("/{ticker}/market-context")
+async def market_context(ticker: str, peer_limit: int = 5):
+    return await get_company_market_context(ticker, _validated_peer_limit(peer_limit))
 
 
 @router.post("", status_code=201)

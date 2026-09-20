@@ -1,8 +1,10 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from app.helpers.dependencies import DbSession, get_current_user
 from app.helpers.schemas import PaginationParams, SectorCreate, SectorUpdate
 from app.handlers.sector_handler import (
+    list_external_subsectors,
     list_sectors,
     get_sector,
     create_sector,
@@ -13,6 +15,11 @@ from app.handlers.sector_handler import (
 router = APIRouter(
     prefix="/sectors", tags=["sectors"], dependencies=[Depends(get_current_user)]
 )
+
+
+@router.get("/external/subsectors")
+async def external_subsectors():
+    return await list_external_subsectors()
 
 
 @router.post("", status_code=201)
