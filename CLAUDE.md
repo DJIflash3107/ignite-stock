@@ -23,9 +23,15 @@ Request flow is `routes -> handlers -> services -> models/database`:
 - `backend/app/helpers/schemas.py` contains Pydantic v2 request and response models. `helpers/responses.py` owns JSON envelopes; `middlewares/error_handlers.py` maps validation, `AppError`, SQLAlchemy, HTTP, and unexpected failures into the standard error shape.
 - `backend/app/models/__init__.py` imports all models so SQLAlchemy metadata includes every table. Alembic uses that metadata for migrations.
 
-Sectors integration lives in `services/sectors_api_client.py` (external HTTP), `services/sectors_service.py` (normalization and process-local TTL cache), and `services/market_intelligence_service.py` (market orchestration and comparisons). Market routes must use those layers and must not call Sectors directly. Sectors failures propagate as `AppError` subclasses; never add mock, fabricated, or fallback business data.
+Sectors integration lives in `services/sectors_api_client.py` (external HTTP), `services/sectors_service.py` (normalization and process-local TTL cache), and `services/market_intelligence_service.py` (market orchestration, deterministic performance calculations, and comparisons). Market routes must use those layers and must not call Sectors directly. Sectors failures propagate as `AppError` subclasses; never add mock, fabricated, or fallback business data.
 
-The Sectors API uses raw API-key authentication in the `Authorization` header. `/v2/index-daily/` accepts only the optional `date` query parameter; it does not accept `start` or `end`. `/v2/idx-total/` accepts bounded `start`/`end` ranges. Cache only successful responses and keep API-credit-expensive requests bounded.
+The Sectors API uses raw API-key authentication in the `Authorization` header.
+- `/v2/index-daily/` accepts only the optional `date` query parameter; it does not accept `start` or `end`.
+- `/v2/index-daily/{index_code}/` accepts bounded `start`/`end` ranges for a specific index.
+- `/v2/daily/{symbol}/` accepts bounded `start`/`end` ranges for stock daily series.
+- `/v2/idx-total/` accepts bounded `start`/`end` ranges.
+- Cache only successful responses and keep API-credit-expensive requests bounded.
+- Market and company impact metrics (returns, relative performance, estimated weights, contributions) are calculated deterministically in the backend with `Decimal` (never by LLM), and use `"weight_source": "estimated_market_cap_share"` because official constituent index weights are not provided by Sectors.
 
 Authentication uses bearer tokens. `get_current_user` in `backend/app/helpers/dependencies.py` decodes the token and loads the user through `user_service.current_user`.
 
@@ -35,12 +41,23 @@ Authenticated endpoints:
 
 - `GET /api/market/overview`
 - `GET /api/market/movers`
+- `GET /api/market/impact`
 - `GET /api/market/sectors/{sector_code}`
 - `GET /api/companies/{ticker}/market-context`
+- `GET /api/companies/{ticker}/impact`
+
+## API surface added by investigation analysis workflow
+
+Authenticated endpoints:
+
+- `POST /api/investigations/analyze` — deterministic investigation pipeline orchestrating stock movement, market context, sector context, peer movement, news, filings, corporate actions, financial fundamentals, evidence aggregation with alignment classification (supporting, contradictory, neutral), potential drivers with impact and confidence levels, and database persistence.
+- `GET /api/investigations/{id}` — returns enriched investigation with nested drivers and evidence items.
+- `GET /api/investigations/{id}/drivers` — returns paginated list of drivers for an investigation.
+- `GET /api/investigations/{id}/evidence` — returns paginated list of evidence items for an investigation.
 
 Market-data routes use source identifiers and Sectors V2 on demand. No local market-data CRUD routes or synchronization endpoint exists.
 
-The company market-context route remains ticker-based and authenticated. Preserve users and investigation/conversation CRUD paths and authentication.
+The company routes (`market-context`, `impact`) remain ticker-based and authenticated. Preserve users and investigation/conversation CRUD paths and authentication.
 
 ## Configuration and migrations
 
@@ -52,15 +69,13 @@ Alembic lives under `backend/alembic/`. `backend/alembic/env.py` loads `Settings
 
 ## Tests and verification
 
-Backend tests are under `backend/tests/` and use pytest/AnyIO with mocked `httpx` transports for Sectors calls. Mock transport data is test-only and must never become runtime fallback data.
+Backend tests are under `backend/tests/` and test schemas, mathematical precision, service calculations, and route registration. Mock transport data is test-only and must never become runtime fallback data.
 
 Run from repository root:
 
 ```powershell
 python -m compileall -q backend/app backend/tests
-$env:PYTHONPATH="backend"; pytest -q backend/tests
-$env:PYTHONPATH="backend"; pytest -q backend/tests/test_sectors_integration.py::test_success_is_cached_for_concurrent_requests
-python backend/tests/self_check.py
+$env:PYTHONPATH="backend"; python -m unittest discover backend/tests
 ```
 
 Run backend API from `backend/`:
@@ -70,10 +85,10 @@ cd C:\Important\ignite-stock\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload  # or: uv run fastapi dev
 ```
 
-There is no separate backend formatter or linter configured. Use `python -m compileall` plus pytest for backend checks. For a single test, use `pytest path/to/test_file.py::test_name`.
+There is no separate backend formatter or linter configured. Use `python -m compileall` plus test runner for backend checks. For a single test file, use `python -m unittest backend/tests/test_impact.py`.
 
 Run frontend commands from `frontend/`:
 

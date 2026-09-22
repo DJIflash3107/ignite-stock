@@ -15,9 +15,9 @@ from app.helpers.exceptions import (
 
 SUBSECTORS_PATH = "/v2/subsectors/"
 COMPANIES_PATH = "/v2/companies/"
-COMPANY_NEWS_PATH = "/v2/company/news/{symbol}/"
-COMPANY_FILINGS_PATH = "/v2/company/filings/{symbol}/"
-COMPANY_FINANCIALS_PATH = "/v2/company/financials/{symbol}/"
+NEWS_PATH = "/v2/news/"
+FILINGS_PATH = "/v2/filings/"
+COMPANY_CORPORATE_ACTIONS_PATH = "/v2/company/corporate-actions/{symbol}/"
 IDX_TOTAL_PATH = "/v2/idx-total/"
 INDEX_DAILY_PATH = "/v2/index-daily/"
 STOCK_DAILY_PATH = "/v2/daily/{symbol}/"
@@ -205,23 +205,35 @@ async def fetch_company_report(symbol: str, sections: str) -> dict[str, Any]:
     return payload
 
 
-async def fetch_company_news(symbol: str, *, limit: int = 20) -> Any:
-    payload = await _request_json(COMPANY_NEWS_PATH.format(symbol=symbol), {"limit": limit})
-    if not isinstance(payload, (list, dict)):
-        raise SectorsInvalidResponseError("Sectors API returned invalid company news")
-    return payload
+async def fetch_company_news(symbol: str, *, limit: int = 20) -> list[dict[str, Any]]:
+    payload = await _request_json(NEWS_PATH, {"symbols": symbol, "limit": limit})
+    if isinstance(payload, dict) and "results" in payload and isinstance(payload["results"], list):
+        return payload["results"]
+    if isinstance(payload, list):
+        return payload
+    raise SectorsInvalidResponseError("Sectors API returned invalid company news")
 
 
-async def fetch_company_filings(symbol: str, *, limit: int = 20) -> Any:
-    payload = await _request_json(COMPANY_FILINGS_PATH.format(symbol=symbol), {"limit": limit})
-    if not isinstance(payload, (list, dict)):
-        raise SectorsInvalidResponseError("Sectors API returned invalid company filings")
-    return payload
+async def fetch_company_filings(symbol: str, *, limit: int = 20) -> list[dict[str, Any]]:
+    payload = await _request_json(FILINGS_PATH, {"symbol": symbol, "limit": limit})
+    if isinstance(payload, dict) and "results" in payload and isinstance(payload["results"], list):
+        return payload["results"]
+    if isinstance(payload, list):
+        return payload
+    raise SectorsInvalidResponseError("Sectors API returned invalid company filings")
 
 
-async def fetch_company_financials(symbol: str, *, sections: str = "") -> Any:
-    params = {"sections": sections} if sections else None
-    payload = await _request_json(COMPANY_FINANCIALS_PATH.format(symbol=symbol), params)
+async def fetch_company_financials(symbol: str, *, sections: str = "financials") -> dict[str, Any]:
+    payload = await _request_json(COMPANY_REPORT_PATH.format(symbol=symbol), {"sections": sections or "financials"})
     if not isinstance(payload, dict):
         raise SectorsInvalidResponseError("Sectors API returned invalid company financials")
     return payload
+
+
+async def fetch_corporate_actions(symbol: str, *, exact_tx_date: str | None = None) -> dict[str, Any]:
+    params = {"exact_tx_date": exact_tx_date} if exact_tx_date else None
+    payload = await _request_json(COMPANY_CORPORATE_ACTIONS_PATH.format(symbol=symbol), params)
+    if not isinstance(payload, dict):
+        raise SectorsInvalidResponseError("Sectors API returned invalid corporate actions")
+    return payload
+

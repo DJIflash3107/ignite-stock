@@ -23,6 +23,32 @@ async def list_investigation_drivers(
         raise DatabaseError() from exc
 
 
+async def list_drivers_for_investigation(
+    db: AsyncSession,
+    investigation_id: UUID,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[InvestigationDriver], int]:
+    try:
+        query = (
+            select(InvestigationDriver)
+            .where(InvestigationDriver.investigation_id == investigation_id)
+            .order_by(InvestigationDriver.rank.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        count_query = (
+            select(func.count())
+            .select_from(InvestigationDriver)
+            .where(InvestigationDriver.investigation_id == investigation_id)
+        )
+        items = (await db.execute(query)).scalars().all()
+        total = (await db.execute(count_query)).scalar_one()
+        return list(items), total
+    except SQLAlchemyError as exc:
+        raise DatabaseError() from exc
+
+
 async def get_investigation_driver(
     db: AsyncSession,
     item_id: UUID,

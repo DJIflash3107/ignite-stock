@@ -28,6 +28,8 @@ class DriverType(StrEnum):
     FUNDAMENTAL = "fundamental"
     NEWS = "news"
     SECTOR = "sector"
+    CORPORATE_ACTION = "corporate_action"
+    MARKET = "market"
     OTHER = "other"
 
 
@@ -44,6 +46,12 @@ class EvidenceType(StrEnum):
     FILING = "filing"
     MARKET = "market"
     OTHER = "other"
+
+
+class EvidenceAlignment(StrEnum):
+    SUPPORTING = "supporting"
+    CONTRADICTORY = "contradictory"
+    NEUTRAL = "neutral"
 
 
 class MessageRole(StrEnum):

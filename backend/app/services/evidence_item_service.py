@@ -23,6 +23,32 @@ async def list_evidence_items(
         raise DatabaseError() from exc
 
 
+async def list_evidence_for_investigation(
+    db: AsyncSession,
+    investigation_id: UUID,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[EvidenceItem], int]:
+    try:
+        query = (
+            select(EvidenceItem)
+            .where(EvidenceItem.investigation_id == investigation_id)
+            .order_by(EvidenceItem.created_at.asc())
+            .limit(limit)
+            .offset(offset)
+        )
+        count_query = (
+            select(func.count())
+            .select_from(EvidenceItem)
+            .where(EvidenceItem.investigation_id == investigation_id)
+        )
+        items = (await db.execute(query)).scalars().all()
+        total = (await db.execute(count_query)).scalar_one()
+        return list(items), total
+    except SQLAlchemyError as exc:
+        raise DatabaseError() from exc
+
+
 async def get_evidence_item(db: AsyncSession, item_id: UUID) -> EvidenceItem:
     try:
         item = await db.get(EvidenceItem, item_id)

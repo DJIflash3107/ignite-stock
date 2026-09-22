@@ -7,6 +7,7 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field
 from app.models.enums import (
     ConfidenceLevel,
     DriverType,
+    EvidenceAlignment,
     EvidenceType,
     ImpactLevel,
     InvestigationStatus,
@@ -295,6 +296,26 @@ class InvestigationRead(InvestigationCreate, OrmSchema):
     created_at: datetime
 
 
+class InvestigationAnalyzeRequest(BaseModel):
+    company_ticker: str = Field(min_length=1, max_length=32)
+    target_date: date
+    question: str | None = None
+    index_code: str = Field(default="IHSG", min_length=1, max_length=64)
+    peer_limit: int = Field(default=5, ge=1, le=20)
+    news_limit: int = Field(default=10, ge=1, le=50)
+    filings_limit: int = Field(default=10, ge=1, le=50)
+
+    @field_validator("company_ticker")
+    @classmethod
+    def normalize_company_ticker(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_index_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+
 class InvestigationDriverCreate(BaseModel):
     investigation_id: UUID
     driver_type: DriverType
@@ -330,6 +351,7 @@ class EvidenceItemCreate(BaseModel):
     data: dict[str, Any]
     source_type: str = Field(min_length=1, max_length=255)
     source_reference: str | None = None
+    alignment: EvidenceAlignment | str | None = None
     observed_at: datetime | None = None
 
 
@@ -342,6 +364,7 @@ class EvidenceItemUpdate(BaseModel):
     data: dict[str, Any] | None = None
     source_type: str | None = Field(default=None, min_length=1, max_length=255)
     source_reference: str | None = None
+    alignment: EvidenceAlignment | str | None = None
     observed_at: datetime | None = None
 
 
@@ -349,6 +372,11 @@ class EvidenceItemRead(EvidenceItemCreate, OrmSchema):
     id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class InvestigationDetailRead(InvestigationRead):
+    drivers: list[InvestigationDriverRead] = []
+    evidence_items: list[EvidenceItemRead] = []
 
 
 class ConversationCreate(BaseModel):

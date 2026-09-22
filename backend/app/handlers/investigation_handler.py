@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.responses import empty_response, list_response, success_response
 from app.helpers.schemas import (
+    EvidenceItemRead,
     InvestigationCreate,
+    InvestigationDetailRead,
+    InvestigationDriverRead,
     InvestigationRead,
     InvestigationUpdate,
     PaginationParams,
@@ -38,8 +41,20 @@ async def get_investigation(
     db: AsyncSession,
     item_id: UUID,
 ) -> JSONResponse:
-    item = await investigation_service.get_investigation(db, item_id)
-    data = InvestigationRead.model_validate(item)
+    item = await investigation_service.get_investigation_with_details(db, item_id)
+    drivers_read = [
+        InvestigationDriverRead.model_validate(d)
+        for d in sorted(item.drivers, key=lambda x: x.rank)
+    ]
+    evidence_read = [
+        EvidenceItemRead.model_validate(e)
+        for e in item.evidence_items
+    ]
+    data = InvestigationDetailRead(
+        **InvestigationRead.model_validate(item).model_dump(),
+        drivers=drivers_read,
+        evidence_items=evidence_read,
+    )
     return success_response("investigation retrieved", "investigation", data)
 
 

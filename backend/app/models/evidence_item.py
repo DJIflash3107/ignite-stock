@@ -22,6 +22,7 @@ class EvidenceItem(IdMixin, TimestampMixin, Base):
     data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     source_type: Mapped[str] = mapped_column(String(255), nullable=False)
     source_reference: Mapped[str | None] = mapped_column(Text, nullable=True)
+    alignment: Mapped[str | None] = mapped_column(String(32), nullable=True)
     observed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

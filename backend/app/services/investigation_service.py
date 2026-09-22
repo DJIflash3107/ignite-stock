@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.helpers.exceptions import ConflictError, DatabaseError, NotFoundError
 from app.models.investigation import Investigation
@@ -29,6 +30,28 @@ async def get_investigation(
 ) -> Investigation:
     try:
         item = await db.get(Investigation, item_id)
+    except SQLAlchemyError as exc:
+        raise DatabaseError() from exc
+
+    if item is None:
+        raise NotFoundError("investigation")
+    return item
+
+
+async def get_investigation_with_details(
+    db: AsyncSession,
+    item_id: UUID,
+) -> Investigation:
+    try:
+        query = (
+            select(Investigation)
+            .options(
+                selectinload(Investigation.drivers),
+                selectinload(Investigation.evidence_items),
+            )
+            .where(Investigation.id == item_id)
+        )
+        item = (await db.execute(query)).scalar_one_or_none()
     except SQLAlchemyError as exc:
         raise DatabaseError() from exc
 

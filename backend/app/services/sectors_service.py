@@ -13,6 +13,7 @@ from app.services.sectors_api_client import (
     fetch_company_news,
     fetch_company_report,
     fetch_companies_page,
+    fetch_corporate_actions,
     fetch_idx_total,
     fetch_index_daily,
     fetch_index_daily_range,
@@ -207,6 +208,16 @@ async def get_company_financials(symbol: str, *, sections: str = "") -> Any:
     return await _cached(
         _cache_key("company-financials", symbol=normalized, sections=sections),
         lambda: fetch_company_financials(normalized, sections=sections),
+    )
+
+
+async def get_corporate_actions(symbol: str, *, exact_tx_date: str | None = None) -> Any:
+    normalized = symbol.strip().upper()
+    if not normalized or not normalized.replace(".", "").isalnum():
+        raise SectorsInvalidResponseError("Sectors API requires a valid ticker")
+    return await _cached(
+        _cache_key("company-corporate-actions", symbol=normalized, exact_tx_date=exact_tx_date or ""),
+        lambda: fetch_corporate_actions(normalized, exact_tx_date=exact_tx_date),
     )
 
 
