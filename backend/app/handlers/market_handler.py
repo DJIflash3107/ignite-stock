@@ -1,7 +1,7 @@
 from fastapi.responses import JSONResponse
 
 from app.helpers.responses import list_response, success_response
-from app.helpers.schemas import MarketMoversQuery, MarketOverviewQuery
+from app.helpers.schemas import MarketImpactQuery, MarketMoversQuery, MarketOverviewQuery
 from app.services import market_intelligence_service
 
 
@@ -33,3 +33,13 @@ async def get_company_market_context(
 ) -> JSONResponse:
     data = await market_intelligence_service.get_company_market_context(ticker, peer_limit)
     return success_response("company market context retrieved", "market_context", data)
+
+
+async def get_market_impact(query: MarketImpactQuery) -> JSONResponse:
+    data = await market_intelligence_service.get_market_impact(query)
+    return success_response("market impact retrieved", "impact", data)
+
+
+async def get_company_impact(ticker: str, query: MarketImpactQuery) -> JSONResponse:
+    data = await market_intelligence_service.get_company_impact(ticker, query)
+    return success_response("company impact retrieved", "impact", data)

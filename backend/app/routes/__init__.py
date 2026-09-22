@@ -8,6 +8,7 @@ from app.routes.conversation_route import router as conversation_router
 from app.routes.message_route import router as message_router
 from app.routes.agent_tool_call_route import router as agent_tool_call_router
 from app.routes.market_route import router as market_router
+from app.routes.company_route import router as company_router
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth_router)
@@ -19,3 +20,4 @@ api_router.include_router(conversation_router)
 api_router.include_router(message_router)
 api_router.include_router(agent_tool_call_router)
 api_router.include_router(market_router)
+api_router.include_router(company_router)

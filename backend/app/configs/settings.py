@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     sectors_api_key: str | None = None
     sectors_api_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
     sectors_api_cache_ttl_seconds: float = Field(default=300.0, ge=0, le=86400)
+    sectors_close_page_limit: int = Field(default=30, ge=1, le=30)
+    sectors_close_max_pages: int = Field(default=20, ge=1, le=30)
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
