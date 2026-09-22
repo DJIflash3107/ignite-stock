@@ -1,4 +1,6 @@
 from app.handlers import (
+    agent_chat_handler,
+    agent_handler,
     agent_tool_call_handler,
     auth,
     auth_handler,
@@ -12,6 +14,8 @@ from app.handlers import (
 )
 
 __all__ = [
+    "agent_chat_handler",
+    "agent_handler",
     "agent_tool_call_handler",
     "auth",
     "auth_handler",
@@ -23,3 +27,4 @@ __all__ = [
     "message_handler",
     "user_handler",
 ]
+

@@ -35,6 +35,14 @@ The Sectors API uses raw API-key authentication in the `Authorization` header.
 
 Authentication uses bearer tokens. `get_current_user` in `backend/app/helpers/dependencies.py` decodes the token and loads the user through `user_service.current_user`.
 
+LangGraph Investigation Agent architecture lives under `backend/app/agent/`:
+- `graph.py`: Compiles a 5-node StateGraph (`detect_intent` -> `plan_investigation` -> `execute_tools` -> `process_evidence` -> `generate_response`). Provides `run_agent` (synchronous execution) and `run_agent_stream` (SSE event generator).
+- `tools.py`: 7 tools wrapping the Sectors API (`get_stock_movement`, `get_market_context`, `get_sector_context`, `get_peer_movements`, `get_company_news`, `get_company_filings`, `get_company_financials`). Real errors are captured in `AgentToolCall.result`; never return mock or fabricated fallback data.
+- `nodes.py`: Node logic for intent parsing, dynamic tool planning, evidence evaluation (alignment & drivers), and reasoning response generation. `_get_llm` uses LangChain ChatOpenAI configured with `OPENAI_API_KEY` and optional `OPENAI_BASE_URL` (e.g. OpenRouter).
+- `prompts.py`: System prompts with domain guidance for the Indonesian stock exchange (IDX).
+- `state.py`: `InvestigationState` TypedDict tracking question, history, intent, plan, tool outputs, drivers, and evidence.
+- `services/agent_chat_service.py`: Conversation thread lifecycle, user ownership verification, context grounding, and chat orchestration.
+
 ## API surface added by market intelligence
 
 Authenticated endpoints:
@@ -59,9 +67,23 @@ Market-data routes use source identifiers and Sectors V2 on demand. No local mar
 
 The company routes (`market-context`, `impact`) remain ticker-based and authenticated. Preserve users and investigation/conversation CRUD paths and authentication.
 
+## API surface added by AI Investigation Agent and Chat
+
+Authenticated endpoints:
+
+- `POST /api/agent/chat` — Conversational interface wrapping the LangGraph investigation workflow. Accepts user messages (`AgentChatRequest`), resolves or auto-creates conversations, carries over multi-turn context (e.g., *"Was this sector-wide?"*, *"Compare it with BMRI"*, *"Did the fundamentals change?"*, *"Show me the evidence"*), executes dynamic Sectors tools, persists user and assistant messages, links the investigation, and returns structured responses (`AgentChatResponse`). Supports SSE streaming (`text/event-stream`) when `stream: true`.
+- `POST /api/agent/investigate` — Direct investigation trigger running the LangGraph state machine (`AgentInvestigateRequest` -> `AgentInvestigateResponse`).
+- `GET /api/agent/conversations` (and `GET /api/conversations`) — Lists paginated conversations owned by the authenticated user, ordered by `updated_at DESC`.
+- `GET /api/agent/conversations/{id}` (and `GET /api/conversations/{id}`) — Gets a single conversation with user ownership verification (returns 404 if unowned/absent).
+- `GET /api/agent/conversations/{id}/messages` (and `GET /api/conversations/{id}/messages`) — Lists paginated messages for a conversation with user ownership verification, ordered by `created_at ASC`.
+
 ## Configuration and migrations
 
-Backend environment loading uses `backend/.env`; `backend/.env.example` documents MySQL, JWT, CORS, database URLs, and Sectors settings (`SECTORS_API_BASE_URL`, `SECTORS_API_KEY`, `SECTORS_API_TIMEOUT_SECONDS`, `SECTORS_API_CACHE_TTL_SECONDS`). `DATABASE_URL` is async (`mysql+asyncmy`), while Alembic uses `DATABASE_SYNC_URL` (`mysql+pymysql`). If sync URL is omitted, settings derive it from the async URL.
+Backend environment loading uses `backend/.env`; `backend/.env.example` documents:
+- MySQL & async database URLs (`DATABASE_URL` with `mysql+asyncmy`, `DATABASE_SYNC_URL` with `mysql+pymysql`).
+- JWT authentication (`JWT_SECRET_KEY`, `JWT_ALGORITHM`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`).
+- Sectors settings (`SECTORS_API_BASE_URL`, `SECTORS_API_KEY`, `SECTORS_API_TIMEOUT_SECONDS`, `SECTORS_API_CACHE_TTL_SECONDS`).
+- AI Agent settings (`OPENAI_API_KEY`, `OPENAI_BASE_URL` supporting OpenRouter via `https://openrouter.ai/api/v1`, `AGENT_LLM_MODEL`, `AGENT_LLM_TEMPERATURE`).
 
 Frontend `.env.example` is currently empty; do not assume a frontend API URL exists until one is added.
 
@@ -69,13 +91,19 @@ Alembic lives under `backend/alembic/`. `backend/alembic/env.py` loads `Settings
 
 ## Tests and verification
 
-Backend tests are under `backend/tests/` and test schemas, mathematical precision, service calculations, and route registration. Mock transport data is test-only and must never become runtime fallback data.
+Backend tests are under `backend/tests/` (including `test_agent_chat.py`) and test schemas, mathematical precision, service calculations, route registration, and API endpoint integration. Mock transport data is test-only and must never become runtime fallback data.
 
 Run from repository root:
 
 ```powershell
 python -m compileall -q backend/app backend/tests
 $env:PYTHONPATH="backend"; python -m unittest discover backend/tests
+```
+
+Run from `backend/`:
+
+```powershell
+$env:PYTHONPATH="."; python -m unittest discover tests
 ```
 
 Run backend API from `backend/`:
@@ -85,7 +113,7 @@ cd C:\Important\ignite-stock\backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn app.main:app --reload  # or: uv run fastapi dev
+uv run fastapi dev  # or: uvicorn app.main:app --reload
 ```
 
 There is no separate backend formatter or linter configured. Use `python -m compileall` plus test runner for backend checks. For a single test file, use `python -m unittest backend/tests/test_impact.py`.

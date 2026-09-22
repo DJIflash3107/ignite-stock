@@ -414,7 +414,7 @@ class MessageUpdate(BaseModel):
 class MessageRead(MessageCreate, OrmSchema):
     metadata: dict[str, Any] | None = Field(
         default=None,
-        validation_alias=AliasChoices("metadata", "meta_data"),
+        validation_alias=AliasChoices("meta_data", "metadata"),
         serialization_alias="metadata",
     )
     id: UUID
@@ -446,3 +446,59 @@ class AgentToolCallRead(AgentToolCallCreate, OrmSchema):
     id: UUID
     created_at: datetime
     updated_at: datetime
+
+
+class AgentInvestigateRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    conversation_id: UUID | None = None
+    company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
+    target_date: date | None = None
+    index_code: str = Field(default="IHSG", min_length=1, max_length=64)
+    stream: bool = Field(default=False)
+
+    @field_validator("company_ticker")
+    @classmethod
+    def normalize_ticker(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_index_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+
+class AgentInvestigateResponse(InvestigationDetailRead):
+    agent_tool_calls: list[AgentToolCallRead] = []
+    conversation_id: UUID | None = None
+
+
+class AgentChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    conversation_id: UUID | None = None
+    company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
+    target_date: date | None = None
+    index_code: str = Field(default="IHSG", min_length=1, max_length=64)
+    stream: bool = Field(default=False)
+
+    @field_validator("company_ticker")
+    @classmethod
+    def normalize_ticker(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_index_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+
+class AgentChatResponse(BaseModel):
+    conversation_id: UUID
+    message_id: UUID | None = None
+    assistant_message: str
+    investigation: AgentInvestigateResponse | None = None
+    tool_calls: list[AgentToolCallRead] = []
+
+
+class ConversationWithMessagesRead(ConversationRead):
+    messages: list[MessageRead] = []
+

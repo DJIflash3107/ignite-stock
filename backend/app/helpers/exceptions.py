@@ -80,3 +80,8 @@ class SectorsUpstreamError(AppError):
 class SectorsInvalidResponseError(AppError):
     def __init__(self, message: str = "Sectors API returned invalid data") -> None:
         super().__init__(76006, message, "sectors", HTTPStatus.BAD_GATEWAY)
+
+
+class AgentConfigurationError(AppError):
+    def __init__(self, message: str = "AI Agent is not configured. Please set OPENAI_API_KEY.") -> None:
+        super().__init__(77001, message, "agent", HTTPStatus.SERVICE_UNAVAILABLE)

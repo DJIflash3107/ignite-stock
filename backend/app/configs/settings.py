@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     sectors_api_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
     sectors_api_cache_ttl_seconds: float = Field(default=300.0, ge=0, le=86400)
 
+    openai_api_key: str | None = None
+    openai_base_url: str | None = None
+    agent_llm_model: str = "openai/gpt-4o-mini"
+    agent_llm_temperature: float = Field(default=0.1, ge=0.0, le=1.0)
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @field_validator("cors_origins", mode="before")

@@ -1,3 +1,4 @@
+from . import agent_chat_service
 from . import agent_tool_call_service
 from . import conversation_service
 from . import evidence_item_service
@@ -10,6 +11,7 @@ from . import sectors_service
 from . import user_service
 
 __all__ = [
+    "agent_chat_service",
     "agent_tool_call_service",
     "conversation_service",
     "evidence_item_service",
@@ -21,3 +23,4 @@ __all__ = [
     "sectors_service",
     "user_service",
 ]
+
