@@ -11,5 +11,8 @@ class User(IdMixin, TimestampMixin, Base):
         String(255), unique=True, index=True, nullable=False
     )
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(
+        String(32), default="user", server_default="user", nullable=False, index=True
+    )
     investigations: Mapped[list["Investigation"]] = relationship(back_populates="user")
     conversations: Mapped[list["Conversation"]] = relationship(back_populates="user")

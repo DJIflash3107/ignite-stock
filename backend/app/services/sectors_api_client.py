@@ -14,11 +14,17 @@ from app.helpers.exceptions import (
 )
 
 SUBSECTORS_PATH = "/v2/subsectors/"
+COMPANIES_PATH = "/v2/companies/"
+COMPANY_NEWS_PATH = "/v2/company/news/{symbol}/"
+COMPANY_FILINGS_PATH = "/v2/company/filings/{symbol}/"
+COMPANY_FINANCIALS_PATH = "/v2/company/financials/{symbol}/"
 IDX_TOTAL_PATH = "/v2/idx-total/"
 INDEX_DAILY_PATH = "/v2/index-daily/"
 TOP_CHANGES_PATH = "/v2/companies/top-changes/"
 SUBSECTOR_REPORT_PATH = "/v2/subsector/report/{sub_sector}/"
 COMPANY_REPORT_PATH = "/v2/company/report/{symbol}/"
+
+COMPANIES_PAGE_SIZE = 200
 
 
 def _upstream_error(response: httpx.Response) -> str | None:
@@ -77,6 +83,41 @@ async def fetch_subsectors() -> list[dict[str, Any]]:
     if not isinstance(payload, list):
         raise SectorsInvalidResponseError("Sectors API returned an invalid subsectors list")
     return payload
+
+
+async def fetch_companies_page(
+    offset: int = 0,
+    limit: int = COMPANIES_PAGE_SIZE,
+    *,
+    where: str | None = None,
+) -> dict[str, Any]:
+    if not isinstance(offset, int) or offset < 0:
+        raise ValueError("offset must be non-negative")
+    if not isinstance(limit, int) or not 1 <= limit <= COMPANIES_PAGE_SIZE:
+        raise ValueError(f"limit must be between 1 and {COMPANIES_PAGE_SIZE}")
+    params: dict[str, str | int] = {
+        "order_by": "symbol",
+        "limit": limit,
+        "offset": offset,
+        "include_query_values": "true",
+    }
+    if where:
+        params["where"] = where
+    payload = await _request_json(COMPANIES_PATH, params)
+    if not isinstance(payload, dict):
+        raise SectorsInvalidResponseError("Sectors API returned an invalid companies page")
+    return payload
+
+
+def index_membership_filter(index_codes: str | tuple[str, ...] | list[str]) -> str:
+    values = (index_codes,) if isinstance(index_codes, str) else tuple(index_codes)
+    normalized = tuple(code.strip().upper() for code in values)
+    if not normalized or any(not code for code in normalized):
+        raise ValueError("index_codes must not be empty")
+    if any(any(char in code for char in "'\"\\\r\n") for code in normalized):
+        raise ValueError("index_codes contain invalid characters")
+    quoted = ", ".join(f"'{code}'" for code in normalized)
+    return f"indices in [{quoted}]"
 
 
 async def fetch_idx_total(start: date, end: date) -> list[dict[str, Any]]:
@@ -139,4 +180,26 @@ async def fetch_company_report(symbol: str, sections: str) -> dict[str, Any]:
     )
     if not isinstance(payload, dict):
         raise SectorsInvalidResponseError("Sectors API returned an invalid company report")
+    return payload
+
+
+async def fetch_company_news(symbol: str, *, limit: int = 20) -> Any:
+    payload = await _request_json(COMPANY_NEWS_PATH.format(symbol=symbol), {"limit": limit})
+    if not isinstance(payload, (list, dict)):
+        raise SectorsInvalidResponseError("Sectors API returned invalid company news")
+    return payload
+
+
+async def fetch_company_filings(symbol: str, *, limit: int = 20) -> Any:
+    payload = await _request_json(COMPANY_FILINGS_PATH.format(symbol=symbol), {"limit": limit})
+    if not isinstance(payload, (list, dict)):
+        raise SectorsInvalidResponseError("Sectors API returned invalid company filings")
+    return payload
+
+
+async def fetch_company_financials(symbol: str, *, sections: str = "") -> Any:
+    params = {"sections": sections} if sections else None
+    payload = await _request_json(COMPANY_FINANCIALS_PATH.format(symbol=symbol), params)
+    if not isinstance(payload, dict):
+        raise SectorsInvalidResponseError("Sectors API returned invalid company financials")
     return payload

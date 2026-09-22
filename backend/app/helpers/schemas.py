@@ -1,11 +1,19 @@
 from datetime import date, datetime, timedelta
-from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
-from app.models.enums import ConfidenceLevel, DriverType, EvidenceType, ImpactLevel, InvestigationStatus, InvestigationType, MessageRole, ToolCallStatus
+from app.models.enums import (
+    ConfidenceLevel,
+    DriverType,
+    EvidenceType,
+    ImpactLevel,
+    InvestigationStatus,
+    InvestigationType,
+    MessageRole,
+    ToolCallStatus,
+)
 
 
 class PaginationParams(BaseModel):
@@ -39,6 +47,7 @@ class UserUpdate(BaseModel):
 
 class UserRead(UserBase, OrmSchema):
     id: UUID
+    role: str
     created_at: datetime
     updated_at: datetime
 
@@ -58,51 +67,9 @@ class TokenRead(BaseModel):
     token_type: str = "bearer"
 
 
-class SectorCreate(BaseModel):
-    code: str = Field(min_length=1, max_length=64)
-    name: str = Field(min_length=1, max_length=255)
-    parent_id: UUID | None = None
-
-
-class SectorUpdate(BaseModel):
-    code: str | None = Field(default=None, min_length=1, max_length=64)
-    name: str | None = Field(default=None, min_length=1, max_length=255)
-    parent_id: UUID | None = None
-
-
-class SectorRead(SectorCreate, OrmSchema):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-
 class SectorsSubsectorRead(BaseModel):
     sector: str = Field(min_length=1)
     subsector: str = Field(min_length=1)
-
-
-class CompanyCreate(BaseModel):
-    ticker: str = Field(min_length=1, max_length=32)
-    name: str = Field(min_length=1, max_length=255)
-    sector_id: UUID
-    subsector: str | None = Field(default=None, max_length=255)
-    market_cap: Decimal | None = Field(default=None, ge=0)
-    is_active: bool = True
-
-
-class CompanyUpdate(BaseModel):
-    ticker: str | None = Field(default=None, min_length=1, max_length=32)
-    name: str | None = Field(default=None, min_length=1, max_length=255)
-    sector_id: UUID | None = None
-    subsector: str | None = Field(default=None, max_length=255)
-    market_cap: Decimal | None = Field(default=None, ge=0)
-    is_active: bool | None = None
-
-
-class CompanyRead(CompanyCreate, OrmSchema):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
 
 
 class MarketOverviewQuery(BaseModel):
@@ -113,7 +80,7 @@ class MarketOverviewQuery(BaseModel):
     @field_validator("index_code")
     @classmethod
     def normalize_index_code(cls, value: str | None) -> str | None:
-        return value.upper() if value else value
+        return value.strip().upper() if value else value
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -155,41 +122,36 @@ class MarketMoversQuery(BaseModel):
         return value.strip().lower() if value else value
 
 
-class MarketPeerQuery(BaseModel):
-    peer_limit: int = Field(default=5, ge=1, le=20)
-
-
 class MarketMoverRead(BaseModel):
     classification: str
     period: str
     ticker: str
     company_name: str
-    price_change: Decimal
-    last_close_price: Decimal
+    price_change: float
+    last_close_price: float
     latest_close_date: date
 
 
 class MarketCapPointRead(BaseModel):
     date: date
-    idx_total_market_cap: Decimal
+    idx_total_market_cap: float
 
 
 class IndexCloseRead(BaseModel):
     index_code: str = Field(min_length=1)
     date: date
-    price: Decimal
+    price: float
 
 
 class MarketOverviewRead(BaseModel):
     start: date
     end: date
     market_cap_series: list[MarketCapPointRead]
-    market_cap_change: dict[str, Decimal | None]
+    market_cap_change: dict[str, float | None]
     index_series: list[IndexCloseRead]
 
 
 class SectorPerformanceRead(BaseModel):
-    sector_id: UUID
     sector_code: str
     sector_name: str
     subsector: str
@@ -201,90 +163,15 @@ class CompanyMarketContextRead(BaseModel):
     company_name: str
     overview: dict[str, Any]
     valuation: dict[str, Any]
-    market_comparison: dict[str, Decimal | None]
-    sector_comparison: dict[str, Decimal | None]
+    market_comparison: dict[str, float | None]
+    sector_comparison: dict[str, float | None]
     peers: list[dict[str, Any]]
-
-
-class IndexCreate(BaseModel):
-    code: str = Field(min_length=1, max_length=64)
-    name: str = Field(min_length=1, max_length=255)
-    is_active: bool = True
-
-
-class IndexUpdate(BaseModel):
-    code: str | None = Field(default=None, min_length=1, max_length=64)
-    name: str | None = Field(default=None, min_length=1, max_length=255)
-    is_active: bool | None = None
-
-
-class IndexRead(IndexCreate, OrmSchema):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-
-class IndexConstituentCreate(BaseModel):
-    index_id: UUID
-    company_id: UUID
-    weight: Decimal | None = Field(default=None, ge=0)
-    effective_from: date
-    effective_to: date | None = None
-
-
-class IndexConstituentUpdate(BaseModel):
-    index_id: UUID | None = None
-    company_id: UUID | None = None
-    weight: Decimal | None = Field(default=None, ge=0)
-    effective_from: date | None = None
-    effective_to: date | None = None
-
-
-class IndexConstituentRead(IndexConstituentCreate, OrmSchema):
-    id: UUID
-    created_at: datetime
-    updated_at: datetime
-
-
-class PriceSnapshotCreate(BaseModel):
-    company_id: UUID
-    trade_date: date
-    open: Decimal
-    high: Decimal
-    low: Decimal
-    close: Decimal
-    volume: int = Field(ge=0)
-    market_cap: Decimal | None = Field(default=None, ge=0)
-    return_1d: Decimal | None = None
-    return_7d: Decimal | None = None
-    return_30d: Decimal | None = None
-    source: str = Field(min_length=1, max_length=255)
-
-
-class PriceSnapshotUpdate(BaseModel):
-    company_id: UUID | None = None
-    trade_date: date | None = None
-    open: Decimal | None = None
-    high: Decimal | None = None
-    low: Decimal | None = None
-    close: Decimal | None = None
-    volume: int | None = Field(default=None, ge=0)
-    market_cap: Decimal | None = Field(default=None, ge=0)
-    return_1d: Decimal | None = None
-    return_7d: Decimal | None = None
-    return_30d: Decimal | None = None
-    source: str | None = Field(default=None, min_length=1, max_length=255)
-
-
-class PriceSnapshotRead(PriceSnapshotCreate, OrmSchema):
-    id: UUID
-    created_at: datetime
 
 
 class InvestigationCreate(BaseModel):
     user_id: UUID | None = None
-    company_id: UUID | None = None
-    index_id: UUID | None = None
+    company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
+    index_code: str | None = Field(default=None, min_length=1, max_length=64)
     investigation_type: InvestigationType
     question: str = Field(min_length=1)
     target_date: date
@@ -293,11 +180,21 @@ class InvestigationCreate(BaseModel):
     overall_confidence: ConfidenceLevel | None = None
     completed_at: datetime | None = None
 
+    @field_validator("company_ticker")
+    @classmethod
+    def normalize_company_ticker(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_investigation_index_code(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
+
 
 class InvestigationUpdate(BaseModel):
     user_id: UUID | None = None
-    company_id: UUID | None = None
-    index_id: UUID | None = None
+    company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
+    index_code: str | None = Field(default=None, min_length=1, max_length=64)
     investigation_type: InvestigationType | None = None
     question: str | None = Field(default=None, min_length=1)
     target_date: date | None = None
@@ -305,6 +202,16 @@ class InvestigationUpdate(BaseModel):
     summary: str | None = None
     overall_confidence: ConfidenceLevel | None = None
     completed_at: datetime | None = None
+
+    @field_validator("company_ticker")
+    @classmethod
+    def normalize_company_ticker(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_investigation_index_code(cls, value: str | None) -> str | None:
+        return value.strip().upper() if value else value
 
 
 class InvestigationRead(InvestigationCreate, OrmSchema):
@@ -401,7 +308,11 @@ class MessageUpdate(BaseModel):
 
 
 class MessageRead(MessageCreate, OrmSchema):
-    metadata: dict[str, Any] | None = Field(default=None, validation_alias=AliasChoices("metadata", "meta_data"), serialization_alias="metadata")
+    metadata: dict[str, Any] | None = Field(
+        default=None,
+        validation_alias=AliasChoices("metadata", "meta_data"),
+        serialization_alias="metadata",
+    )
     id: UUID
     created_at: datetime
     updated_at: datetime

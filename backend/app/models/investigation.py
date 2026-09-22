@@ -1,21 +1,23 @@
 from datetime import date, datetime
 from uuid import UUID
+
 from sqlalchemy import Date, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.models.base import Base, IdMixin
-from app.models.base import utc_now
+
+from app.models.base import Base, IdMixin, utc_now
 
 
 class Investigation(IdMixin, Base):
     __tablename__ = "investigations"
+
     user_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True
     )
-    company_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("companies.id", ondelete="SET NULL"), index=True, nullable=True
+    company_ticker: Mapped[str | None] = mapped_column(
+        String(32), index=True, nullable=True
     )
-    index_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("indices.id", ondelete="SET NULL"), index=True, nullable=True
+    index_code: Mapped[str | None] = mapped_column(
+        String(64), index=True, nullable=True
     )
     investigation_type: Mapped[str] = mapped_column(
         String(64), index=True, nullable=False
@@ -32,8 +34,6 @@ class Investigation(IdMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     user: Mapped["User | None"] = relationship(back_populates="investigations")
-    company: Mapped["Company | None"] = relationship(back_populates="investigations")
-    index: Mapped["MarketIndex | None"] = relationship(back_populates="investigations")
     drivers: Mapped[list["InvestigationDriver"]] = relationship(
         back_populates="investigation"
     )

@@ -1,6 +1,5 @@
 from datetime import date
 from decimal import Decimal
-from uuid import UUID
 
 from pydantic import ValidationError
 
@@ -15,7 +14,6 @@ from app.helpers.schemas import (
     MarketMoversQuery,
     SectorPerformanceRead,
 )
-from app.services.sector_service import get_sector_by_id
 from app.services.sectors_service import (
     get_company_report,
     get_idx_total,
@@ -140,18 +138,22 @@ async def get_market_movers(query: MarketMoversQuery) -> list[MarketMoverRead]:
     return movers
 
 
-async def get_sector_performance(db, sector_id: UUID) -> SectorPerformanceRead:
-    sector = await get_sector_by_id(db, sector_id)
+async def get_sector_performance(sector_code: str) -> SectorPerformanceRead:
+    normalized_code = sector_code.strip().lower()
+    if not normalized_code or not normalized_code.replace("-", "").isalnum():
+        raise ValidationAppError({"sector_code": "sector_code must contain only letters, numbers, or hyphens"})
     report = await get_subsector_report(
-        sector.code,
+        normalized_code,
         "statistics,market_cap,stability,growth,companies",
     )
     try:
+        sector_name = report.get("sector", normalized_code)
+        if not isinstance(sector_name, str) or not sector_name.strip():
+            raise SectorsInvalidResponseError("Sectors API returned invalid sector name")
         return SectorPerformanceRead(
-            sector_id=sector.id,
-            sector_code=sector.code,
-            sector_name=sector.name,
-            subsector=_required(report, "sub_sector"),
+            sector_code=normalized_code,
+            sector_name=sector_name,
+            subsector=_required(report, "sub_sector", None),
             report=report,
         )
     except (ValidationError, TypeError, ValueError) as exc:

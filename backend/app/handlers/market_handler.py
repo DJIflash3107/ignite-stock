@@ -1,7 +1,4 @@
-from uuid import UUID
-
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.helpers.responses import list_response, success_response
 from app.helpers.schemas import MarketMoversQuery, MarketOverviewQuery
@@ -25,8 +22,8 @@ async def get_market_movers(query: MarketMoversQuery) -> JSONResponse:
     )
 
 
-async def get_sector_performance(db: AsyncSession, sector_id: UUID) -> JSONResponse:
-    data = await market_intelligence_service.get_sector_performance(db, sector_id)
+async def get_sector_performance(sector_code: str) -> JSONResponse:
+    data = await market_intelligence_service.get_sector_performance(sector_code)
     return success_response("sector performance retrieved", "sector", data)
 
 

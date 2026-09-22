@@ -35,10 +35,12 @@ Authenticated endpoints:
 
 - `GET /api/market/overview`
 - `GET /api/market/movers`
-- `GET /api/market/sectors/{sector_id}`
+- `GET /api/market/sectors/{sector_code}`
 - `GET /api/companies/{ticker}/market-context`
 
-The company market-context route must stay before `GET /api/companies/{company_id}` so FastAPI does not treat `market-context` as a UUID. Preserve existing CRUD paths and authentication.
+Market-data routes use source identifiers and Sectors V2 on demand. No local market-data CRUD routes or synchronization endpoint exists.
+
+The company market-context route remains ticker-based and authenticated. Preserve users and investigation/conversation CRUD paths and authentication.
 
 ## Configuration and migrations
 
