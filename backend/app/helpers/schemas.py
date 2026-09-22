@@ -101,42 +101,6 @@ class MarketOverviewQuery(BaseModel):
         return resolved_start, resolved_end
 
 
-class MarketImpactQuery(BaseModel):
-    start: date | None = None
-    end: date | None = None
-    index_code: str = Field(default="ihsg", min_length=1, max_length=64)
-    sub_sector: str | None = Field(default=None, min_length=1, max_length=128)
-    contributor_limit: int = Field(default=5, ge=1, le=20)
-
-    @field_validator("index_code")
-    @classmethod
-    def normalize_impact_index_code(cls, value: str) -> str:
-        return value.strip().lower()
-
-    @field_validator("sub_sector")
-    @classmethod
-    def normalize_impact_sub_sector(cls, value: str | None) -> str | None:
-        return value.strip().lower() if value else value
-
-    @model_validator(mode="after")
-    def validate_dates(self):
-        self.resolved_dates()
-        return self
-
-    def resolved_dates(self) -> tuple[date, date]:
-        resolved_end = self.end or date.today()
-        resolved_start = self.start or resolved_end - timedelta(days=30)
-        if resolved_start < date(2021, 1, 1):
-            raise ValueError("start must not be earlier than 2021-01-01")
-        if resolved_end > date.today():
-            raise ValueError("end must not be in the future")
-        if resolved_start > resolved_end:
-            raise ValueError("start must not be after end")
-        if (resolved_end - resolved_start).days > 90:
-            raise ValueError("date range must not exceed 90 days")
-        return resolved_start, resolved_end
-
-
 class MarketMoversQuery(BaseModel):
     period: str = Field(default="1d", pattern="^(1d|7d|14d|30d|365d)$")
     classification: str = Field(default="top_gainers,top_losers")
@@ -204,52 +168,80 @@ class CompanyMarketContextRead(BaseModel):
     peers: list[dict[str, Any]]
 
 
-class ImpactContributorRead(BaseModel):
+class DateRangeIndexQuery(BaseModel):
+    start: date | None = None
+    end: date | None = None
+    index_code: str = Field(default="IHSG", min_length=1, max_length=64)
+
+    @field_validator("index_code")
+    @classmethod
+    def normalize_index_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        self.resolved_dates()
+        return self
+
+    def resolved_dates(self) -> tuple[date, date]:
+        resolved_end = self.end or date.today()
+        resolved_start = self.start or resolved_end - timedelta(days=30)
+        if resolved_start < date(2021, 1, 1):
+            raise ValueError("start must not be earlier than 2021-01-01")
+        if resolved_end > date.today():
+            raise ValueError("end must not be in the future")
+        if resolved_start > resolved_end:
+            raise ValueError("start must not be after end")
+        if (resolved_end - resolved_start).days > 90:
+            raise ValueError("date range must not exceed 90 days")
+        return resolved_start, resolved_end
+
+
+class MarketImpactQuery(DateRangeIndexQuery):
+    limit: int = Field(default=5, ge=1, le=20)
+
+
+class CompanyImpactQuery(DateRangeIndexQuery):
+    pass
+
+
+class StockContributorRead(BaseModel):
     ticker: str
-    company_name: str | None = None
-    stock_return: float | None = None
-    start_market_cap: float | None = None
-    market_weight: float | None = None
-    estimated_market_contribution: float | None = None
-    contribution_status: str = "unavailable_no_weight_data"
-
-
-class ImpactStatusRead(BaseModel):
-    market_contribution: str
-    sector_contribution: str
-    method: str
+    company_name: str
+    price_change: float
+    market_cap: float
+    estimated_weight: float
+    estimated_contribution: float
 
 
 class MarketImpactRead(BaseModel):
     start: date
     end: date
     index_code: str
-    index_return: float
-    sector_code: str | None = None
-    sector_return: float | None = None
-    relative_performance: float | None = None
-    contribution_method: str
-    contribution_status: ImpactStatusRead
-    major_contributors: list[ImpactContributorRead]
+    index_return: float | None
+    market_return: float | None
+    relative_performance: float | None
+    weight_source: str = "estimated_market_cap_share"
+    top_contributors: list[StockContributorRead]
 
 
 class CompanyImpactRead(BaseModel):
-    start: date
-    end: date
     ticker: str
     company_name: str
-    sub_sector: str
-    stock_return: float
+    sub_sector: str | None
+    start: date
+    end: date
     index_code: str
-    index_return: float
-    sector_return: float
-    relative_to_market: float
-    relative_to_sector: float
-    estimated_market_contribution: float | None = None
-    estimated_sector_contribution: float | None = None
-    contribution_status: ImpactStatusRead
-    contribution_method: str
-    major_contributors: list[ImpactContributorRead]
+    stock_return: float | None
+    index_return: float | None
+    market_return: float | None
+    sector_return: float | None
+    relative_to_index: float | None
+    relative_to_sector: float | None
+    estimated_weight: float | None
+    estimated_contribution: float | None
+    weight_source: str = "estimated_market_cap_share"
+    peers: list[dict[str, Any]]
 
 
 class InvestigationCreate(BaseModel):

@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -12,7 +13,7 @@ from app.helpers.responses import error_response
 logger = logging.getLogger("ignite_stock")
 
 
-def field_errors(exc: RequestValidationError) -> dict[str, str]:
+def field_errors(exc: RequestValidationError | ValidationError) -> dict[str, str]:
     errors: dict[str, str] = {}
     for error in exc.errors():
         loc = [str(part) for part in error.get("loc", []) if part not in ("body", "query", "path")]
@@ -65,6 +66,7 @@ async def unexpected_error_handler(request: Request, exc: Exception):
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(RequestValidationError, validation_error_handler)
+    app.add_exception_handler(ValidationError, validation_error_handler)
     app.add_exception_handler(StarletteHTTPException, http_error_handler)
     app.add_exception_handler(SQLAlchemyError, db_error_handler)
     app.add_exception_handler(Exception, unexpected_error_handler)

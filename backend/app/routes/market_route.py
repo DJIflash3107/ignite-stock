@@ -7,7 +7,11 @@ from app.handlers.market_handler import (
     get_sector_performance,
 )
 from app.helpers.dependencies import get_current_user
-from app.helpers.schemas import MarketImpactQuery, MarketMoversQuery, MarketOverviewQuery
+from app.helpers.schemas import (
+    MarketImpactQuery,
+    MarketMoversQuery,
+    MarketOverviewQuery,
+)
 
 
 __all__ = ["router"]
@@ -29,11 +33,11 @@ async def movers(query: MarketMoversQuery = Depends()):
     return await get_market_movers(query)
 
 
+@router.get("/impact")
+async def market_impact(query: MarketImpactQuery = Depends()):
+    return await get_market_impact(query)
+
+
 @router.get("/sectors/{sector_code}")
 async def sector_performance(sector_code: str):
     return await get_sector_performance(sector_code)
-
-
-@router.get("/impact")
-async def impact(query: MarketImpactQuery = Depends()):
-    return await get_market_impact(query)

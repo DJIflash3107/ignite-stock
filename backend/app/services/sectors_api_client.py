@@ -18,11 +18,10 @@ COMPANIES_PATH = "/v2/companies/"
 COMPANY_NEWS_PATH = "/v2/company/news/{symbol}/"
 COMPANY_FILINGS_PATH = "/v2/company/filings/{symbol}/"
 COMPANY_FINANCIALS_PATH = "/v2/company/financials/{symbol}/"
-CLOSE_PATH = "/v2/close/"
-DAILY_PATH = "/v2/daily/{symbol}/"
 IDX_TOTAL_PATH = "/v2/idx-total/"
 INDEX_DAILY_PATH = "/v2/index-daily/"
-INDEX_DAILY_HISTORY_PATH = "/v2/index-daily/{index_code}/"
+STOCK_DAILY_PATH = "/v2/daily/{symbol}/"
+INDEX_DAILY_RANGE_PATH = "/v2/index-daily/{index_code}/"
 TOP_CHANGES_PATH = "/v2/companies/top-changes/"
 SUBSECTOR_REPORT_PATH = "/v2/subsector/report/{sub_sector}/"
 COMPANY_REPORT_PATH = "/v2/company/report/{symbol}/"
@@ -123,34 +122,6 @@ def index_membership_filter(index_codes: str | tuple[str, ...] | list[str]) -> s
     return f"indices in [{quoted}]"
 
 
-async def fetch_close_page(
-    date_value: date,
-    offset: int = 0,
-    limit: int = 30,
-) -> dict[str, Any]:
-    if not isinstance(offset, int) or offset < 0:
-        raise ValueError("offset must be non-negative")
-    if not isinstance(limit, int) or not 1 <= limit <= 30:
-        raise ValueError("limit must be between 1 and 30")
-    payload = await _request_json(
-        CLOSE_PATH,
-        {"date": date_value.isoformat(), "offset": offset, "limit": limit},
-    )
-    if not isinstance(payload, dict):
-        raise SectorsInvalidResponseError("Sectors API returned an invalid full-universe close page")
-    return payload
-
-
-async def fetch_daily(symbol: str, start: date, end: date) -> list[dict[str, Any]]:
-    payload = await _request_json(
-        DAILY_PATH.format(symbol=symbol),
-        {"start": start.isoformat(), "end": end.isoformat()},
-    )
-    if not isinstance(payload, list):
-        raise SectorsInvalidResponseError("Sectors API returned an invalid daily price series")
-    return payload
-
-
 async def fetch_idx_total(start: date, end: date) -> list[dict[str, Any]]:
     payload = await _request_json(
         IDX_TOTAL_PATH,
@@ -172,17 +143,23 @@ async def fetch_index_daily(
     return payload
 
 
-async def fetch_index_daily_history(
-    index_code: str,
-    start: date,
-    end: date,
-) -> list[dict[str, Any]]:
+async def fetch_stock_daily(symbol: str, start: date, end: date) -> list[dict[str, Any]]:
     payload = await _request_json(
-        INDEX_DAILY_HISTORY_PATH.format(index_code=index_code),
+        STOCK_DAILY_PATH.format(symbol=symbol),
         {"start": start.isoformat(), "end": end.isoformat()},
     )
     if not isinstance(payload, list):
-        raise SectorsInvalidResponseError("Sectors API returned an invalid index history")
+        raise SectorsInvalidResponseError("Sectors API returned an invalid stock daily series")
+    return payload
+
+
+async def fetch_index_daily_range(index_code: str, start: date, end: date) -> list[dict[str, Any]]:
+    payload = await _request_json(
+        INDEX_DAILY_RANGE_PATH.format(index_code=index_code),
+        {"start": start.isoformat(), "end": end.isoformat()},
+    )
+    if not isinstance(payload, list):
+        raise SectorsInvalidResponseError("Sectors API returned an invalid index daily series")
     return payload
 
 

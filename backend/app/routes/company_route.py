@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends
 
-from app.handlers.market_handler import get_company_impact, get_company_market_context
-from app.helpers.schemas import MarketImpactQuery
+from app.handlers.market_handler import (
+    get_company_impact,
+    get_company_market_context,
+)
 from app.helpers.dependencies import get_current_user
 from app.helpers.exceptions import ValidationAppError
+from app.helpers.schemas import CompanyImpactQuery
 
 MAX_PEER_LIMIT = 20
 
@@ -24,5 +27,9 @@ async def market_context(ticker: str, peer_limit: int = 5):
 
 
 @router.get("/{ticker}/impact")
-async def impact(ticker: str, query: MarketImpactQuery = Depends()):
+async def company_impact(
+    ticker: str,
+    query: CompanyImpactQuery = Depends(),
+):
     return await get_company_impact(ticker, query)
+
