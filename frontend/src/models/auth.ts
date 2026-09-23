@@ -30,5 +30,26 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 }
+
+export interface AuthResponseData {
+  profile: User;
+  token: TokenRead;
+}
+
+export interface AuthBackendResponse {
+  message?: { success: string };
+  data: {
+    user: AuthResponseData;
+  };
+}
+
+export interface MeBackendResponse {
+  message?: { success: string };
+  data: {
+    user: User;
+  };
+}
+

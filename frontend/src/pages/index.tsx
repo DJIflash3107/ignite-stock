@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAppSelector } from '@/redux/hooks';
 import {
   ArrowRight,
   BarChart3,
@@ -24,6 +26,8 @@ import { Badge } from '@/components/ui/badge';
 
 export const LandingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'supporting' | 'contradictory' | 'neutral'>('all');
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
 
   return (
     <div className="min-h-screen bg-secondary text-foreground font-body selection:bg-accent/30 selection:text-white">
@@ -72,17 +76,28 @@ export const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            <a href="#features">
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex border-border text-secondary-foreground hover:text-white">
-                View Architecture
-              </Button>
-            </a>
-            <a href="#cta">
-              <Button variant="default" size="sm" className="shadow-md shadow-accent/20">
-                Launch Agent
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </a>
+            {isAuthenticated ? (
+              <Link to="/market">
+                <Button variant="default" size="sm" className="shadow-md shadow-accent/20">
+                  Open Platform
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="text-secondary-foreground hover:text-white">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="default" size="sm" className="shadow-md shadow-accent/20">
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -113,12 +128,12 @@ export const LandingPage: React.FC = () => {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href="#cta" className="w-full sm:w-auto">
+              <Link to={isAuthenticated ? "/investigations" : "/login"} className="w-full sm:w-auto">
                 <Button variant="default" size="lg" className="w-full sm:w-auto shadow-xl shadow-accent/25 hover:shadow-accent/40 text-base">
                   <Bot className="mr-2 h-5 w-5" />
                   Start an Investigation
                 </Button>
-              </a>
+              </Link>
               <a href="#evidence-engine" className="w-full sm:w-auto">
                 <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base">
                   Explore Evidence Engine
@@ -920,17 +935,16 @@ export const LandingPage: React.FC = () => {
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              variant="default"
-              size="lg"
-              className="w-full sm:w-auto shadow-xl shadow-accent/30 hover:shadow-accent/50 text-base"
-              onClick={() => {
-                alert('Agent chat interface is connecting to the backend API at ' + (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'));
-              }}
-            >
-              <Bot className="mr-2 h-5 w-5" />
-              Launch Investigation Console
-            </Button>
+            <Link to={isAuthenticated ? "/investigations" : "/login"} className="w-full sm:w-auto">
+              <Button
+                variant="default"
+                size="lg"
+                className="w-full sm:w-auto shadow-xl shadow-accent/30 hover:shadow-accent/50 text-base"
+              >
+                <Bot className="mr-2 h-5 w-5" />
+                Launch Investigation Console
+              </Button>
+            </Link>
             <a href="#how-it-works">
               <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base">
                 Review Methodology

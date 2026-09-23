@@ -11,7 +11,7 @@ IgniteStock is a two-part app:
 
 Backend runtime starts at `backend/app/main.py`. It loads settings, logging, CORS, request middleware, centralized exception handlers, and the `/api` router. Root and `/health` return the standard success response.
 
-Frontend root starts at `frontend/src/main.tsx`, wrapping the app with Redux `<Provider store={store}>` and loading `frontend/src/index.css`. Routes are defined in `frontend/src/App.tsx` (`/` for landing and `*` for 404). Ignore dependency-generated files under `frontend/node_modules/` when exploring or editing source.
+Frontend root starts at `frontend/src/main.tsx`, wrapping the app with Redux `<Provider store={store}>` and loading `frontend/src/index.css`. Routes are defined in `frontend/src/App.tsx`: public landing (`/`), guest auth routes (`/login`, `/register`), protected routes inside `AppShell` (`/market`, `/investigations`, `/investigations/:id`, `/investigations/:id/ai`, `/profile`), and catch-all 404 (`*`). Ignore dependency-generated files under `frontend/node_modules/` when exploring or editing source.
 
 ## Backend architecture
 
@@ -82,9 +82,13 @@ Authenticated endpoints:
 The frontend is structured under `frontend/src/` with clear domain separation:
 
 - `components/`:
-  - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`) using `class-variance-authority` and `cn()`.
+  - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`, `Label`, `Avatar`, `DropdownMenu`) using `class-variance-authority` and `cn()`.
   - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`).
-- `hooks/`: Reusable hooks including `useFormWithSchema` (React Hook Form + Zod resolver).
+  - `auth/`: Route protection guards (`ProtectedRoute` gating authenticated routes with loading state and redirect to `/login`, `GuestRoute` redirecting authenticated users to `/market`).
+  - `layout/`: Reusable application shell (`AppShell` with collapsible responsive sidebar, topbar with live IDX status badge, user dropdown menu, page container) and `GlobalSearch` (direct IDX ticker search routing to investigations without fake suggestions or mock data).
+- `hooks/`: Reusable hooks including:
+  - `useFormWithSchema`: React Hook Form + Zod resolver integration.
+  - `useAuthInit`: Boot-time session recovery via `/auth/me` and window listener for `auth:unauthorized` 401 events.
 - `lib/`:
   - `utils.ts`: `cn()` utility combining `clsx` and `tailwind-merge`.
   - `api-client.ts`: Axios instance with request/response interceptors (token injection, automatic 401 handling) and typed helpers (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`).
@@ -92,15 +96,25 @@ The frontend is structured under `frontend/src/` with clear domain separation:
   - `dayjs.ts`: Pre-configured Day.js with `relativeTime` and `localizedFormat` plugins, plus formatting helpers.
 - `models/`: TypeScript interfaces and domain types:
   - `api.ts`: Standard response envelopes (`ApiResponse`, `ApiErrorResponse`, `PaginatedResponse`).
-  - `auth.ts`: User and auth request/response schemas.
+  - `auth.ts`: User, token, request schemas, and `AuthState` (`user`, `token`, `isAuthenticated`, `isLoading`, `isInitialized`, `error`).
   - `market.ts`: Market movers, index points, contributors, and market/company impact data.
   - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`).
   - `conversation.ts`: Agent chat requests, tool calls, and conversation threads.
-- `pages/`: Route page components (`index.tsx` complete landing page, `not-found.tsx` 404 fallback).
+- `pages/`: Route page components:
+  - `index.tsx`: Public landing page with dynamic auth navigation buttons.
+  - `login.tsx`: User sign-in page with Zod schema validation and Redux thunk dispatch.
+  - `register.tsx`: User registration page with password confirmation and auto-redirect.
+  - `market.tsx`: Market intelligence dashboard overview shell.
+  - `investigations/index.tsx`: Investigations list workspace supporting `?ticker=` query param.
+  - `investigations/detail.tsx`: Investigation report detail view with AI assistant trigger.
+  - `investigations/ai.tsx`: Interactive multi-turn AI investigation chat assistant shell.
+  - `profile.tsx`: Authenticated user profile and session settings.
+  - `not-found.tsx`: 404 fallback page.
 - `redux/`:
   - `store.ts`: Redux Toolkit store configured with `auth` and `investigation` slices.
   - `hooks.ts`: Typed `useAppDispatch` and `useAppSelector`.
-  - `slices/`: State slices (`authSlice.ts`, `investigationSlice.ts`).
+  - `slices/`: State slices (`authSlice.ts` with `isInitialized` boot flag and extraReducers, `investigationSlice.ts`).
+  - `thunks/`: Async thunks (`authThunks.ts`: `loginUser`, `registerUser`, `fetchCurrentUser`, `logoutUser`).
 - `schema/`: Zod validation schemas for forms (`auth.ts` for login/registration, `investigation.ts` for queries).
 
 Design system tokens (Tailwind CSS 4 `@theme` in `src/index.css`):
