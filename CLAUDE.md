@@ -7,11 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 IgniteStock is a two-part app:
 
 - `backend/`: FastAPI + async SQLAlchemy service using MySQL.
-- `frontend/`: React 19 + TypeScript + Vite + Tailwind CSS app.
+- `frontend/`: React 19 + TypeScript + Vite + Tailwind CSS 4 app with Redux Toolkit, Axios, react-router-dom, react-hook-form, Zod, and Day.js.
 
 Backend runtime starts at `backend/app/main.py`. It loads settings, logging, CORS, request middleware, centralized exception handlers, and the `/api` router. Root and `/health` return the standard success response.
 
-Frontend currently has one route (`/`) rendered through `frontend/src/App.tsx` and `frontend/src/pages/index.tsx`; `frontend/src/main.tsx` mounts React and `frontend/src/index.css` loads Tailwind. Ignore dependency-generated files under `frontend/node_modules/` when exploring or editing source.
+Frontend root starts at `frontend/src/main.tsx`, wrapping the app with Redux `<Provider store={store}>` and loading `frontend/src/index.css`. Routes are defined in `frontend/src/App.tsx` (`/` for landing and `*` for 404). Ignore dependency-generated files under `frontend/node_modules/` when exploring or editing source.
 
 ## Backend architecture
 
@@ -77,6 +77,41 @@ Authenticated endpoints:
 - `GET /api/agent/conversations/{id}` (and `GET /api/conversations/{id}`) — Gets a single conversation with user ownership verification (returns 404 if unowned/absent).
 - `GET /api/agent/conversations/{id}/messages` (and `GET /api/conversations/{id}/messages`) — Lists paginated messages for a conversation with user ownership verification, ordered by `created_at ASC`.
 
+## Frontend architecture
+
+The frontend is structured under `frontend/src/` with clear domain separation:
+
+- `components/`:
+  - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`) using `class-variance-authority` and `cn()`.
+  - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`).
+- `hooks/`: Reusable hooks including `useFormWithSchema` (React Hook Form + Zod resolver).
+- `lib/`:
+  - `utils.ts`: `cn()` utility combining `clsx` and `tailwind-merge`.
+  - `api-client.ts`: Axios instance with request/response interceptors (token injection, automatic 401 handling) and typed helpers (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`).
+  - `api-error.ts`: `ApiError` class and `extractErrorMessage()` adhering to backend error envelope (`code`, `message`, `details`).
+  - `dayjs.ts`: Pre-configured Day.js with `relativeTime` and `localizedFormat` plugins, plus formatting helpers.
+- `models/`: TypeScript interfaces and domain types:
+  - `api.ts`: Standard response envelopes (`ApiResponse`, `ApiErrorResponse`, `PaginatedResponse`).
+  - `auth.ts`: User and auth request/response schemas.
+  - `market.ts`: Market movers, index points, contributors, and market/company impact data.
+  - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`).
+  - `conversation.ts`: Agent chat requests, tool calls, and conversation threads.
+- `pages/`: Route page components (`index.tsx` complete landing page, `not-found.tsx` 404 fallback).
+- `redux/`:
+  - `store.ts`: Redux Toolkit store configured with `auth` and `investigation` slices.
+  - `hooks.ts`: Typed `useAppDispatch` and `useAppSelector`.
+  - `slices/`: State slices (`authSlice.ts`, `investigationSlice.ts`).
+- `schema/`: Zod validation schemas for forms (`auth.ts` for login/registration, `investigation.ts` for queries).
+
+Design system tokens (Tailwind CSS 4 `@theme` in `src/index.css`):
+- 60% Primary: `#282a36` (cards, surfaces, toolbars)
+- 30% Secondary: `#1f202a` (background, deep contrast surfaces)
+- 10% Accent: `#ea6947` (brand highlights, action CTAs, key status indicators)
+- Headings: `Montserrat`
+- Body: `Open Sans`
+
+Path alias: `@/*` resolves to `frontend/src/*` via Vite and tsconfig.
+
 ## Configuration and migrations
 
 Backend environment loading uses `backend/.env`; `backend/.env.example` documents:
@@ -85,7 +120,8 @@ Backend environment loading uses `backend/.env`; `backend/.env.example` document
 - Sectors settings (`SECTORS_API_BASE_URL`, `SECTORS_API_KEY`, `SECTORS_API_TIMEOUT_SECONDS`, `SECTORS_API_CACHE_TTL_SECONDS`).
 - AI Agent settings (`OPENAI_API_KEY`, `OPENAI_BASE_URL` supporting OpenRouter via `https://openrouter.ai/api/v1`, `AGENT_LLM_MODEL`, `AGENT_LLM_TEMPERATURE`).
 
-Frontend `.env.example` is currently empty; do not assume a frontend API URL exists until one is added.
+Frontend environment loading uses `frontend/.env`; `frontend/.env.example` documents:
+- `VITE_API_BASE_URL`: Base URL for the backend API (defaults to `http://localhost:8000/api`).
 
 Alembic lives under `backend/alembic/`. `backend/alembic/env.py` loads `Settings.sync_database_url` and uses `Base.metadata` for autogenerate. Keep migration revisions in `backend/alembic/versions/`; inspect autogenerated files before applying them. Empty template revisions do not create tables.
 
