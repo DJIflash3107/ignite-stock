@@ -8,6 +8,8 @@ export interface MarketMover {
   latest_close_date: string;
 }
 
+export type MoverPeriod = '1d' | '7d' | '14d' | '30d' | '365d';
+
 export interface MarketCapPoint {
   date: string;
   idx_total_market_cap: number;
@@ -52,12 +54,54 @@ export interface CompanyImpact {
   peers: Record<string, unknown>[];
 }
 
-export interface MarketOverviewData {
+export interface IndexClose {
   index_code: string;
-  start_date: string;
-  end_date: string;
-  latest_index_price?: number;
-  index_change_pct?: number;
-  total_market_cap?: number;
-  market_movers?: MarketMover[];
+  date: string;
+  price: number;
+}
+
+export interface MarketCapChange {
+  absolute?: number | null;
+  percentage?: number | null;
+  [key: string]: number | null | undefined;
+}
+
+export interface MarketOverview {
+  start: string;
+  end: string;
+  market_cap_series: MarketCapPoint[];
+  market_cap_change: MarketCapChange;
+  index_series: IndexClose[];
+}
+
+export interface MarketOverviewResponse {
+  message: {
+    success: string;
+  };
+  data: {
+    market: MarketOverview;
+  };
+}
+
+export interface MarketMoversResponse {
+  message: {
+    success: string;
+  };
+  data: {
+    movers: MarketMover[];
+    pagination: {
+      total: number;
+      limit: number;
+      offset: number;
+    };
+  };
+}
+
+export interface MarketImpactResponse {
+  message: {
+    success: string;
+  };
+  data: {
+    impact: MarketImpact;
+  };
 }
