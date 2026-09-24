@@ -111,7 +111,7 @@ export function useMarketData() {
       fetchMovers(period),
       fetchImpact(),
     ]);
-  }, [fetchOverview, fetchMovers, period]);
+  }, [fetchOverview, fetchMovers, fetchImpact, period]);
 
   useEffect(() => {
     fetchAll();

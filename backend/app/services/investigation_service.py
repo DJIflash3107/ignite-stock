@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,10 +13,36 @@ async def list_investigations(
     db: AsyncSession,
     limit: int,
     offset: int,
+    user_id: UUID | None = None,
+    search: str | None = None,
+    investigation_type: str | None = None,
 ) -> tuple[list[Investigation], int]:
+    conditions = []
+    if user_id is not None:
+        conditions.append(Investigation.user_id == user_id)
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        conditions.append(
+            or_(
+                Investigation.company_ticker.ilike(pattern),
+                Investigation.index_code.ilike(pattern),
+                Investigation.question.ilike(pattern),
+            )
+        )
+    if investigation_type:
+        conditions.append(Investigation.investigation_type == investigation_type)
+
     try:
-        query = select(Investigation).limit(limit).offset(offset)
-        count_query = select(func.count()).select_from(Investigation)
+        query = (
+            select(Investigation)
+            .where(*conditions)
+            .order_by(Investigation.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        count_query = (
+            select(func.count()).select_from(Investigation).where(*conditions)
+        )
         items = (await db.execute(query)).scalars().all()
         total = (await db.execute(count_query)).scalar_one()
         return list(items), total

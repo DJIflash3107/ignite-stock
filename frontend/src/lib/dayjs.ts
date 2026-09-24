@@ -20,9 +20,5 @@ export function timeAgo(date: string | number | Date | null | undefined): string
   return dayjs(date).fromNow();
 }
 
-export function isValidDate(date: unknown): boolean {
-  return dayjs(date as string).isValid();
-}
-
 export { dayjs };
 export default dayjs;

@@ -1,6 +1,7 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.helpers.dependencies import CurrentUser, DbSession, get_current_user
+from app.models.enums import InvestigationType
 from app.helpers.schemas import (
     InvestigationAnalyzeRequest,
     InvestigationCreate,
@@ -42,8 +43,16 @@ async def create(schema: InvestigationCreate, db: DbSession):
 
 
 @router.get("")
-async def list_(db: DbSession, pagination: PaginationParams = Depends()):
-    return await list_investigations(db, pagination)
+async def list_(
+    db: DbSession,
+    current_user: CurrentUser,
+    pagination: PaginationParams = Depends(),
+    search: str | None = Query(default=None, max_length=255),
+    investigation_type: InvestigationType | None = Query(default=None),
+):
+    return await list_investigations(
+        db, pagination, current_user, search, investigation_type
+    )
 
 
 @router.get("/{item_id}")

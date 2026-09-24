@@ -53,3 +53,18 @@ export interface MeBackendResponse {
   };
 }
 
+/** Body accepted by `PATCH /users/{id}`. */
+export interface UserUpdateRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+}
+
+/** Envelope returned by `PATCH /users/{id}`. */
+export interface UserResponse {
+  message?: { success: string };
+  data: {
+    user: User;
+  };
+}
+

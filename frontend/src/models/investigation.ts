@@ -102,6 +102,23 @@ export interface InvestigationDetailResponse {
   data: { investigation: InvestigationDetail };
 }
 
+/** Query parameters accepted by `GET /investigations`. */
+export interface InvestigationListParams {
+  limit?: number;
+  offset?: number;
+  search?: string;
+  investigation_type?: InvestigationType;
+}
+
+/** `GET /investigations` envelope: `{ message, data: { investigations, pagination } }`. */
+export interface InvestigationListResponse {
+  message: { success: string };
+  data: {
+    investigations: Investigation[];
+    pagination: { total: number; limit: number; offset: number };
+  };
+}
+
 export interface InvestigationDriversResponse {
   message: { success: string };
   data: {

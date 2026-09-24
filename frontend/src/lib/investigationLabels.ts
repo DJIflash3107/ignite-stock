@@ -5,6 +5,7 @@ import type {
   EvidenceType,
   ImpactLevel,
   InvestigationStatus,
+  InvestigationType,
 } from '@/models/investigation';
 
 /**
@@ -14,6 +15,18 @@ import type {
  */
 
 type BadgeVariant = 'default' | 'secondary' | 'outline' | 'supporting' | 'contradictory' | 'neutral' | 'info';
+
+export const INVESTIGATION_TYPE_LABEL: Record<InvestigationType, string> = {
+  company: 'Company',
+  index: 'Index',
+  sector: 'Sector',
+  general: 'General',
+};
+
+export function investigationTypeLabel(type?: InvestigationType | null): string {
+  if (!type) return '—';
+  return INVESTIGATION_TYPE_LABEL[type] ?? type;
+}
 
 export const ALIGNMENT_LABEL: Record<EvidenceAlignment, string> = {
   supporting: 'Supporting',

@@ -15,16 +15,23 @@ from app.helpers.schemas import (
 )
 from app.services import investigation_service
 from app.services.base import payload
+from app.models.user import User
 
 
 async def list_investigations(
     db: AsyncSession,
     pagination: PaginationParams,
+    current_user: User,
+    search: str | None = None,
+    investigation_type: str | None = None,
 ) -> JSONResponse:
     items, total = await investigation_service.list_investigations(
         db,
         pagination.limit,
         pagination.offset,
+        user_id=current_user.id,
+        search=search,
+        investigation_type=investigation_type,
     )
     data = [InvestigationRead.model_validate(item) for item in items]
     return list_response(
