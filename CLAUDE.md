@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working in this
 IgniteStock is a two-part app:
 
 - `backend/`: FastAPI + async SQLAlchemy service using MySQL.
-- `frontend/`: React 19 + TypeScript + Vite + Tailwind CSS 4 app with Redux Toolkit, Axios, react-router-dom, react-hook-form, Zod, and Day.js.
+- `frontend/`: React 19 + TypeScript + Vite + Tailwind CSS 4 app with Redux Toolkit, Axios, react-router-dom, react-hook-form, Zod, Day.js, and markdown rendering via `react-markdown` + `remark-gfm`.
 
 Backend runtime starts at `backend/app/main.py`. It loads settings, logging, CORS, request middleware, centralized exception handlers, and the `/api` router. Root and `/health` return the standard success response.
 
@@ -41,7 +41,7 @@ LangGraph Investigation Agent architecture lives under `backend/app/agent/`:
 - `nodes.py`: Node logic for intent parsing, dynamic tool planning, evidence evaluation (alignment & drivers), and reasoning response generation. `_get_llm` uses LangChain ChatOpenAI configured with `OPENAI_API_KEY` and optional `OPENAI_BASE_URL` (e.g. OpenRouter).
 - `prompts.py`: System prompts with domain guidance for the Indonesian stock exchange (IDX).
 - `state.py`: `InvestigationState` TypedDict tracking question, history, intent, plan, tool outputs, drivers, and evidence.
-- `services/agent_chat_service.py`: Conversation thread lifecycle, user ownership verification, context grounding, and chat orchestration.
+- `services/agent_chat_service.py`: Conversation thread lifecycle, user ownership verification, context grounding, and chat orchestration. `get_or_create_conversation` reuses the most recent `(user, investigation)` conversation when an `investigation_id` is supplied so a workspace resumes deterministically; `list_user_conversations` supports an optional `investigation_id` filter. `run_chat`/`run_chat_stream` only overwrite the conversation's investigation link when the caller did not already bind one.
 
 ## API surface added by market intelligence
 
@@ -71,9 +71,9 @@ The company routes (`market-context`, `impact`) remain ticker-based and authenti
 
 Authenticated endpoints:
 
-- `POST /api/agent/chat` — Conversational interface wrapping the LangGraph investigation workflow. Accepts user messages (`AgentChatRequest`), resolves or auto-creates conversations, carries over multi-turn context (e.g., *"Was this sector-wide?"*, *"Compare it with BMRI"*, *"Did the fundamentals change?"*, *"Show me the evidence"*), executes dynamic Sectors tools, persists user and assistant messages, links the investigation, and returns structured responses (`AgentChatResponse`). Supports SSE streaming (`text/event-stream`) when `stream: true`.
+- `POST /api/agent/chat` — Conversational interface wrapping the LangGraph investigation workflow. Accepts user messages (`AgentChatRequest`), resolves or auto-creates conversations, carries over multi-turn context (e.g., *"Was this sector-wide?"*, *"Compare it with BMRI"*, *"Did the fundamentals change?"*, *"Show me the evidence"*), executes dynamic Sectors tools, persists user and assistant messages, links the investigation, and returns structured responses (`AgentChatResponse`). Supports SSE streaming (`text/event-stream`) when `stream: true`. When `investigation_id` is supplied, the conversation is bound to (and resumed for) that investigation instead of spawning a new one.
 - `POST /api/agent/investigate` — Direct investigation trigger running the LangGraph state machine (`AgentInvestigateRequest` -> `AgentInvestigateResponse`).
-- `GET /api/agent/conversations` (and `GET /api/conversations`) — Lists paginated conversations owned by the authenticated user, ordered by `updated_at DESC`.
+- `GET /api/agent/conversations` (and `GET /api/conversations`) — Lists paginated conversations owned by the authenticated user, ordered by `updated_at DESC`. Accepts an optional `investigation_id` filter to resolve the conversation bound to a specific investigation.
 - `GET /api/agent/conversations/{id}` (and `GET /api/conversations/{id}`) — Gets a single conversation with user ownership verification (returns 404 if unowned/absent).
 - `GET /api/agent/conversations/{id}/messages` (and `GET /api/conversations/{id}/messages`) — Lists paginated messages for a conversation with user ownership verification, ordered by `created_at ASC`.
 
@@ -91,6 +91,7 @@ The frontend is structured under `frontend/src/` with clear domain separation:
   - `useAuthInit`: Boot-time session recovery via `/auth/me` and window listener for `auth:unauthorized` 401 events.
   - `useMarketData`: Parallel fetching for market intelligence endpoints (`/market/overview`, `/market/movers`, `/market/impact`) using `Promise.allSettled`, independent loading/error states, period switching, and retry triggers.
   - `useInvestigationDetail`: Loads a single investigation (`GET /investigations/{id}`) first, then the ticker-scoped company endpoints (`market-context`, `impact`) once the real ticker is known. Every section keeps an independent loading/error/refetch state; a failed request never populates another section and never falls back to fabricated data. Uses `AbortController` on ticker/id change.
+  - `useInvestigationChat`: Drives the AI workspace conversation — resolves the conversation bound to an `investigation_id` (`GET /agent/conversations?investigation_id=`), loads history, streams turns via `lib/agentStream`, tracks real agent status steps from SSE events, and exposes `send`/`retry`/`cancel`/`clearError`. Retries replay the last failed message; cancellation uses `AbortController`. Falls back to the non-streamed `POST /agent/chat` only when the stream cannot start at all (never to mask an agent error).
 - `lib/`:
   - `utils.ts`: `cn()` utility combining `clsx` and `tailwind-merge`.
   - `api-client.ts`: Axios instance with request/response interceptors (token injection, automatic 401 handling) and typed helpers (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`).
@@ -99,12 +100,14 @@ The frontend is structured under `frontend/src/` with clear domain separation:
   - `formatters.ts`: Deterministic formatting utilities for IDR currency (`formatCurrency`), abbreviated market cap (`formatMarketCap`), percentages (`formatPercent`), weight (`formatWeight`), and contribution (`formatContribution`) preserving backend-provided metrics without recalculation.
   - `investigationEvidence.ts`: Maps backend evidence types to the seven report tabs (Market, Sector, Peers, News, Filings, Financials). Because the backend only emits `price | financial | news | filing | market | other`, Sector is derived from `other` items carrying `data.sub_sector` and Peers from `price` items carrying `data.peers`; the standalone price item appears only under All. Provides filter/count helpers.
   - `investigationLabels.ts`: Display mappings (labels + semantic badge variants) for alignment, confidence, impact, driver type, evidence type, and status, plus no-clear-catalyst detection and evidence aggregation helpers. No business logic — purely presentation.
+  - `agentStream.ts`: Fetch + `ReadableStream` SSE client for `POST /agent/chat` with `stream: true` (Axios cannot consume a browser streaming body). Parses `event:`/`data:` frames, surfaces real backend errors as `ApiError`/`AgentStreamError`, and honours `AbortSignal`. Never fabricates events.
+  - `agentEvents.ts`: Maps real SSE events (`intent_detected`, `plan_created`, `tool_started`/`tool_completed`, `evidence_processed`, `response_generated`) to human-readable status steps with tool labels, merging tool start/complete in place. No synthetic progress is ever produced.
 - `models/`: TypeScript interfaces and domain types:
   - `api.ts`: Standard response envelopes (`ApiResponse`, `ApiErrorResponse`, `PaginatedResponse`).
   - `auth.ts`: User, token, request schemas, and `AuthState` (`user`, `token`, `isAuthenticated`, `isLoading`, `isInitialized`, `error`).
   - `market.ts`: Market movers (`MarketMover`, `MoverPeriod`), index points (`IndexClose`), market cap points (`MarketCapPoint`), market overview (`MarketOverview`), contributors (`StockContributor`), market/company impact data (`MarketImpact`, `CompanyImpact`), and API response envelopes.
   - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`). Enums mirror `backend/app/models/enums.py` exactly (investigation type/status, confidence, impact level, driver type, evidence type, alignment) — do not add values the backend cannot emit. Also holds the typed response envelopes and the `CompanyMarketContext` model; `CompanyImpact`/`CompanyImpactResponse` live in `market.ts`.
-  - `conversation.ts`: Agent chat requests, tool calls, and conversation threads.
+  - `conversation.ts`: Agent chat requests, tool calls, conversation threads, response envelopes, and the typed SSE event union (`AgentStreamEvent`/`AgentStatusStep`) emitted by the backend stream.
 - `pages/`: Route page components:
   - `index.tsx`: Public landing page with dynamic auth navigation buttons.
   - `login.tsx`: User sign-in page with Zod schema validation and Redux thunk dispatch.
@@ -112,7 +115,7 @@ The frontend is structured under `frontend/src/` with clear domain separation:
   - `market.tsx`: Market intelligence dashboard with Indonesian market summary, sector & index performance, top gainers, top losers with period switcher, estimated market contributors, quick stock investigation, real-time ticker filter, neutral-pulse loading skeletons, error states with retry, and direct "Investigate" navigation (`/investigations?ticker=XXXX`).
   - `investigations/index.tsx`: Investigations list workspace supporting `?ticker=` query param. Hosts the `NewInvestigationDialog` (validated with `analyzeRequestSchema`) that runs `POST /investigations/analyze` and navigates to the created report; a failed analyze shows the real backend error inline and never creates placeholder results.
   - `investigations/detail.tsx`: Investigation report detail view composing `StockHeaderSection`, `ComparisonSection` (market vs sector), `PeersSection`, `DriversSection`, `ConfidenceImpactSection`, `EvidenceSection` (tabbed), `SummarySection`, and `AskAboutSection`. Section components live in `investigations/components/`. Must clearly distinguish factual evidence (source-attributed, labelled "Fact") from AI interpretation (summary/drivers/verdicts, labelled "Interpretation"), a legitimate "No Clear Catalyst Detected" outcome (warning notice, not an error), and actual system errors (`ErrorDisplay` + retry, never fallback data).
-  - `investigations/ai.tsx`: Interactive multi-turn AI investigation chat assistant shell.
+  - `investigations/ai.tsx`: AI investigation workspace (`/investigations/:id/ai`) — a two-pane layout with the conversation on the left and investigation context on the right (stacked below `lg`). The conversation is bound to the investigation via `investigation_id` so it resumes across reloads. Assistant responses render as markdown; agent execution status is shown only from real backend SSE events (no faked tool progress), and failures surface the real error with retry. Assistant sub-components live in `investigations/components/ai/` (`ConversationPanel`, `MessageList`, `MessageBubble`, `AgentStatusTrail`, `SuggestedQuestions`, `Composer`, `InvestigationContextPanel`, `ContextMetricRow`, `MarkdownMessage`).
   - `profile.tsx`: Authenticated user profile and session settings.
   - `not-found.tsx`: 404 fallback page.
 - `redux/`:
@@ -155,6 +158,8 @@ Accessibility:
 - Never signal state by color alone — pair semantic colors with an icon or text label.
 
 Forbidden effects: no gradients, glassmorphism, glow, neon, backdrop blur, or decorative visual effects. Skeletons use a neutral pulse (no shimmer gradient).
+
+Markdown rendering: backend agent output (chat assistant messages and investigation `summary`) is GitHub-flavoured markdown. Render it with the shared `investigations/components/ai/MarkdownMessage.tsx` component (`react-markdown` + `remark-gfm`) — never dump raw markdown text into a `<p>`. Styling maps onto the tokens above (headings use `font-heading`, tables/code scroll horizontally inside the bubble, links use accent). Raw HTML is intentionally not rendered.
 
 Path alias: `@/*` resolves to `frontend/src/*` via Vite and tsconfig.
 

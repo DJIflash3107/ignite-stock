@@ -59,6 +59,7 @@ async def list_conversations(
     db: AsyncSession,
     current_user: User,
     pagination: PaginationParams,
+    investigation_id: UUID | None = None,
 ) -> JSONResponse:
     """Retrieve paginated conversations belonging to current_user."""
     items, total = await agent_chat_service.list_user_conversations(
@@ -66,6 +67,7 @@ async def list_conversations(
         current_user.id,
         pagination.limit,
         pagination.offset,
+        investigation_id,
     )
     data = [ConversationRead.model_validate(item) for item in items]
     return list_response(

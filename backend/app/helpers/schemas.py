@@ -451,6 +451,7 @@ class AgentToolCallRead(AgentToolCallCreate, OrmSchema):
 class AgentInvestigateRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     conversation_id: UUID | None = None
+    investigation_id: UUID | None = None
     company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
     target_date: date | None = None
     index_code: str = Field(default="IHSG", min_length=1, max_length=64)
@@ -475,6 +476,7 @@ class AgentInvestigateResponse(InvestigationDetailRead):
 class AgentChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
     conversation_id: UUID | None = None
+    investigation_id: UUID | None = None
     company_ticker: str | None = Field(default=None, min_length=1, max_length=32)
     target_date: date | None = None
     index_code: str = Field(default="IHSG", min_length=1, max_length=64)

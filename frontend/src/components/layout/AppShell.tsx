@@ -79,7 +79,7 @@ export const AppShell: React.FC = () => {
       {/* Sidebar (30% navigation surface) */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-secondary transition-[width,transform] duration-200 lg:static',
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-secondary transition-[width,transform] duration-200 lg:sticky lg:inset-y-auto lg:top-0 lg:h-screen',
           isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0',
           isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
         )}

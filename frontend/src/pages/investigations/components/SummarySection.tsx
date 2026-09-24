@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/feedback/Skeleton';
+import { MarkdownMessage } from './ai/MarkdownMessage';
 
 /**
  * Investigation summary — the backend-generated narrative. This is an AI
@@ -36,7 +37,7 @@ export const SummarySection: React.FC<SummarySectionProps> = ({ summary, loading
             <Skeleton className="h-4 w-2/3" />
           </div>
         ) : summary ? (
-          <p className="text-base text-secondary-foreground leading-relaxed">{summary}</p>
+          <MarkdownMessage content={summary} className="text-secondary-foreground" />
         ) : (
           <p className="text-sm text-muted-foreground">
             No summary was generated for this investigation.

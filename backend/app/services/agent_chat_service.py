@@ -27,14 +27,38 @@ async def get_or_create_conversation(
     user_id: UUID | None,
     conversation_id: UUID | None = None,
     initial_title: str | None = None,
+    investigation_id: UUID | None = None,
 ) -> Conversation:
-    """Retrieve an existing conversation verifying ownership, or create a new one."""
+    """Retrieve an existing conversation verifying ownership, or create a new one.
+
+    When no explicit ``conversation_id`` is supplied but an ``investigation_id``
+    is, the most recently updated conversation for that (user, investigation)
+    pair is reused so the workspace resumes deterministically instead of
+    spawning a duplicate thread.
+    """
     if conversation_id:
         return await get_user_conversation(db, user_id, conversation_id)
+
+    if investigation_id:
+        try:
+            query = (
+                select(Conversation)
+                .where(Conversation.investigation_id == investigation_id)
+                .order_by(Conversation.updated_at.desc())
+                .limit(1)
+            )
+            if user_id is not None:
+                query = query.where(Conversation.user_id == user_id)
+            existing = (await db.execute(query)).scalar_one_or_none()
+            if existing is not None:
+                return existing
+        except SQLAlchemyError as exc:
+            logger.warning("Failed to look up conversation for investigation: %s", exc)
 
     title = (initial_title or "New Conversation")[:80].strip()
     conv = Conversation(
         user_id=user_id,
+        investigation_id=investigation_id,
         title=title,
     )
     db.add(conv)
@@ -53,6 +77,7 @@ async def list_user_conversations(
     user_id: UUID | None,
     limit: int = 50,
     offset: int = 0,
+    investigation_id: UUID | None = None,
 ) -> tuple[list[Conversation], int]:
     """Retrieve paginated conversations belonging to the specified user."""
     try:
@@ -61,6 +86,9 @@ async def list_user_conversations(
         if user_id is not None:
             query = query.where(Conversation.user_id == user_id)
             count_query = count_query.where(Conversation.user_id == user_id)
+        if investigation_id is not None:
+            query = query.where(Conversation.investigation_id == investigation_id)
+            count_query = count_query.where(Conversation.investigation_id == investigation_id)
         query = query.order_by(Conversation.updated_at.desc()).limit(limit).offset(offset)
         items = (await db.execute(query)).scalars().all()
         total = (await db.execute(count_query)).scalar_one()
@@ -132,12 +160,14 @@ async def run_chat(
         user_id=user_id,
         conversation_id=request.conversation_id,
         initial_title=request.message,
+        investigation_id=request.investigation_id,
     )
     conversation_id = conv.id
 
     investigate_request = AgentInvestigateRequest(
         question=request.message,
         conversation_id=conversation_id,
+        investigation_id=request.investigation_id,
         company_ticker=request.company_ticker,
         target_date=request.target_date,
         index_code=request.index_code,
@@ -150,14 +180,17 @@ async def run_chat(
         user_id=user_id,
     )
 
-    # Link conversation with investigation if not yet set
-    try:
-        conv_fresh = await db.get(Conversation, conversation_id)
-        if conv_fresh and conv_fresh.investigation_id != investigation_response.id:
-            conv_fresh.investigation_id = investigation_response.id
-            await db.commit()
-    except SQLAlchemyError:
-        logger.warning("Could not update investigation_id on conversation %s", conversation_id)
+    # Link conversation with the agent's investigation only when the caller did
+    # not already bind this conversation to a specific investigation. When a
+    # workspace investigation_id is supplied, keep that binding intact.
+    if not request.investigation_id:
+        try:
+            conv_fresh = await db.get(Conversation, conversation_id)
+            if conv_fresh and conv_fresh.investigation_id != investigation_response.id:
+                conv_fresh.investigation_id = investigation_response.id
+                await db.commit()
+        except SQLAlchemyError:
+            logger.warning("Could not update investigation_id on conversation %s", conversation_id)
 
     # Fetch the assistant message ID created during investigation persistence
     msg_query = (
@@ -191,6 +224,7 @@ async def run_chat_stream(
         user_id=user_id,
         conversation_id=request.conversation_id,
         initial_title=request.message,
+        investigation_id=request.investigation_id,
     )
     conversation_id = conv.id
 
@@ -205,6 +239,7 @@ async def run_chat_stream(
     investigate_request = AgentInvestigateRequest(
         question=request.message,
         conversation_id=conversation_id,
+        investigation_id=request.investigation_id,
         company_ticker=request.company_ticker,
         target_date=request.target_date,
         index_code=request.index_code,
@@ -212,8 +247,9 @@ async def run_chat_stream(
     )
 
     async for event in run_agent_stream(db=db, request=investigate_request, user_id=user_id):
-        # Update conversation link if completed event contains investigation
-        if event.get("event") == "completed":
+        # Link the agent's investigation only when the caller did not bind this
+        # conversation to a specific investigation up front.
+        if event.get("event") == "completed" and not request.investigation_id:
             inv_data = event.get("data", {}).get("investigation", {})
             inv_id_str = inv_data.get("id")
             if inv_id_str:

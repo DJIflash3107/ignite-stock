@@ -38,9 +38,12 @@ async def list_conversations(
     db: DbSession,
     current_user: CurrentUser,
     pagination: PaginationParams = Depends(),
+    investigation_id: UUID | None = None,
 ):
     """List conversations belonging to the authenticated user."""
-    return await agent_chat_handler.list_conversations(db, current_user, pagination)
+    return await agent_chat_handler.list_conversations(
+        db, current_user, pagination, investigation_id
+    )
 
 
 @router.get("/conversations/{conversation_id}")
