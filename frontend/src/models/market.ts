@@ -1,3 +1,5 @@
+import type { PeerEntry } from './investigation';
+
 export interface MarketMover {
   classification: 'top_gainers' | 'top_losers';
   period: '1d' | '7d' | '14d' | '30d' | '365d';
@@ -51,7 +53,12 @@ export interface CompanyImpact {
   estimated_weight: number | null;
   estimated_contribution: number | null;
   weight_source: string;
-  peers: Record<string, unknown>[];
+  peers: PeerEntry[];
+}
+
+export interface CompanyImpactResponse {
+  message: { success: string };
+  data: { impact: CompanyImpact };
 }
 
 export interface IndexClose {

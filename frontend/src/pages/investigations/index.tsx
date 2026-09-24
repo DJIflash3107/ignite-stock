@@ -1,9 +1,10 @@
-import React from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SearchCode, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/feedback/EmptyState';
+import { NewInvestigationDialog } from './NewInvestigationDialog';
 
 /**
  * Investigations workspace.
@@ -12,8 +13,8 @@ import { EmptyState } from '@/components/feedback/EmptyState';
  */
 export const InvestigationsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const tickerQuery = searchParams.get('ticker')?.toUpperCase();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <div className="space-y-8">
@@ -35,14 +36,7 @@ export const InvestigationsPage: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          variant="default"
-          onClick={() => {
-            if (tickerQuery) {
-              navigate(`/investigations/new?ticker=${tickerQuery}`);
-            }
-          }}
-        >
+        <Button variant="default" onClick={() => setIsDialogOpen(true)}>
           <Plus className="h-4 w-4" aria-hidden="true" />
           <span>New Investigation</span>
         </Button>
@@ -60,8 +54,8 @@ export const InvestigationsPage: React.FC = () => {
             </p>
           </div>
           <Button
-            variant="default"
-            onClick={() => navigate(`/investigations/${tickerQuery}`)}
+            variant="secondary"
+            onClick={() => setIsDialogOpen(true)}
             className="shrink-0"
           >
             Analyze {tickerQuery}
@@ -79,6 +73,12 @@ export const InvestigationsPage: React.FC = () => {
             ? `Initiate a deterministic investigation for ${tickerQuery} to orchestrate stock movement, peer comparisons, and regulatory filings.`
             : 'Enter an IDX stock ticker in the top search bar or click "New Investigation" to analyze price movements, market drivers, and corporate filings.'
         }
+      />
+
+      <NewInvestigationDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        defaultTicker={tickerQuery}
       />
     </div>
   );

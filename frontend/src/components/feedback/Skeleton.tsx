@@ -68,3 +68,29 @@ export const SkeletonTableRow: React.FC<{ columns?: number; className?: string }
     </tr>
   );
 };
+
+/**
+ * Evidence card placeholder used while the evidence section is loading.
+ * Neutral pulse only, matching the shared Skeleton behaviour.
+ */
+export const SkeletonEvidenceRow: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div
+      className={cn(
+        'space-y-3 rounded-[0.25rem] border border-border bg-surface-card p-5',
+        className
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-5 w-24" />
+      </div>
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+      <div className="flex items-center gap-3 pt-1">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+    </div>
+  );
+};

@@ -1,40 +1,69 @@
 import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Bot, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ErrorDisplay } from '@/components/feedback/ErrorDisplay';
+import { Skeleton, SkeletonCard } from '@/components/feedback/Skeleton';
+import { useInvestigationDetail } from '@/hooks/useInvestigationDetail';
+import { StockHeaderSection } from './components/StockHeaderSection';
+import { ComparisonSection } from './components/ComparisonSection';
+import { PeersSection } from './components/PeersSection';
+import { DriversSection } from './components/DriversSection';
+import { ConfidenceImpactSection } from './components/ConfidenceImpactSection';
+import { EvidenceSection } from './components/EvidenceSection';
+import { SummarySection } from './components/SummarySection';
+import { AskAboutSection } from './components/AskAboutSection';
 
 /**
- * Investigation report detail.
- * The three overview facts are presented as a flat divided row instead of
- * nested cards, and only one accent CTA is shown at a time.
+ * Investigation report detail (`/investigations/:id`).
+ * Composes the stock header, market/sector comparison, peer comparison,
+ * potential drivers, confidence & impact, tabbed evidence, summary and the
+ * "ask about this investigation" CTA. Every section owns its own loading and
+ * error state; failed requests never fall back to fabricated data.
  */
 export const InvestigationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const {
+    investigation,
+    investigationLoading,
+    investigationError,
+    refetchInvestigation,
+    drivers,
+    driversLoading,
+    driversError,
+    refetchDrivers,
+    evidence,
+    evidenceLoading,
+    evidenceError,
+    refetchEvidence,
+    marketContext,
+    marketContextLoading,
+    marketContextError,
+    refetchMarketContext,
+    impact,
+    impactLoading,
+    impactError,
+    refetchImpact,
+  } = useInvestigationDetail(id);
 
-  const target = id && id.length <= 6 ? id : 'IDX Anomaly';
+  const ticker = investigation?.company_ticker ?? null;
 
-  const facts = [
-    {
-      label: 'Investigation target',
-      value: <span className="font-mono uppercase">{target}</span>,
-      note: 'Evaluated across stock movements, sector context, and company filings.',
-    },
-    {
-      label: 'Analysis status',
-      value: <Badge variant="supporting">Completed</Badge>,
-      note: 'Deterministic evidence pipeline executed with complete audit trail.',
-    },
-    {
-      label: 'Investigation AI',
-      value: 'Multi-Turn Agent',
-      note: 'Ask follow-up questions or compare against peers with the LangGraph agent.',
-    },
-  ];
+  // Peer rows come from market context first, falling back to the impact
+  // payload (both are backend-supplied). Never synthesised.
+  const peers =
+    marketContext?.peers && marketContext.peers.length > 0
+      ? marketContext.peers
+      : impact?.peers ?? [];
+
+  const peerLoading = marketContextLoading || impactLoading;
+  const peerError = marketContextError ?? impactError;
+  const retryPeers = () => {
+    void refetchMarketContext();
+    void refetchImpact();
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fadeIn">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link
@@ -59,51 +88,87 @@ export const InvestigationDetailPage: React.FC = () => {
               ID: {id}
             </Badge>
           </div>
-          <p className="mt-2 text-base text-secondary-foreground">
-            Multi-source evidence synthesis with ranked drivers and confidence score.
+          <p className="mt-2 max-w-2xl text-base text-secondary-foreground leading-relaxed">
+            Multi-source evidence synthesis with ranked drivers and confidence scoring.
           </p>
         </div>
-
-        <Button
-          variant="default"
-          onClick={() => navigate(`/investigations/${id}/ai`)}
-        >
-          <Bot className="h-4 w-4" aria-hidden="true" />
-          <span>Chat with AI Agent</span>
-        </Button>
       </header>
 
-      {/* Overview facts */}
-      <dl className="grid grid-cols-1 divide-y divide-border border-y border-border md:grid-cols-3 md:divide-x md:divide-y-0">
-        {facts.map((fact) => (
-          <div key={fact.label} className="py-4 md:px-6 md:first:pl-0 md:last:pr-0">
-            <dt className="text-sm text-muted-foreground">{fact.label}</dt>
-            <dd className="mt-2 text-lg font-bold text-white">{fact.value}</dd>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{fact.note}</p>
+      {/* Investigation-level loading / error gates the report body */}
+      {investigationLoading ? (
+        <div className="space-y-6">
+          <SkeletonCard />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <SkeletonCard />
+            <SkeletonCard />
           </div>
-        ))}
-      </dl>
-
-      {/* Follow-up prompt */}
-      <div className="flex flex-col gap-4 rounded-[0.25rem] border border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="font-heading text-xl font-bold text-white">
-            Have follow-up questions about this investigation?
-          </h3>
-          <p className="mt-1 text-sm text-secondary-foreground leading-relaxed">
-            Ask the AI Investigation Agent: &ldquo;Was this sector-wide?&rdquo;, &ldquo;Did the
-            fundamentals change?&rdquo;, or &ldquo;Show me contradictory evidence&rdquo;.
-          </p>
+          <Skeleton className="h-64 w-full" />
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => navigate(`/investigations/${id}/ai`)}
-          className="shrink-0"
-        >
-          Launch Assistant
-          <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
+      ) : investigationError ? (
+        <ErrorDisplay
+          title="Failed to load investigation"
+          message={investigationError}
+          onRetry={refetchInvestigation}
+        />
+      ) : !investigation ? (
+        <ErrorDisplay
+          title="Investigation not found"
+          message="This investigation could not be found or is not accessible."
+          onRetry={refetchInvestigation}
+        />
+      ) : (
+        <>
+          {/* Stock header & latest movement */}
+          <StockHeaderSection investigation={investigation} loading={false} />
+
+          {/* Market vs sector + peer comparison */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ComparisonSection
+              impact={impact}
+              loading={impactLoading}
+              error={impactError}
+              onRetry={refetchImpact}
+            />
+            <PeersSection
+              peers={peers}
+              loading={peerLoading}
+              error={peerError}
+              onRetry={retryPeers}
+              evidenceItems={evidence}
+            />
+          </div>
+
+          {/* Potential drivers + confidence & impact */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <DriversSection
+              drivers={drivers}
+              loading={driversLoading}
+              error={driversError}
+              onRetry={refetchDrivers}
+            />
+            <ConfidenceImpactSection
+              confidence={investigation.overall_confidence ?? null}
+              drivers={drivers}
+              evidenceItems={evidence}
+              loading={driversLoading || investigationLoading}
+            />
+          </div>
+
+          {/* Evidence explorer */}
+          <EvidenceSection
+            items={evidence}
+            loading={evidenceLoading}
+            error={evidenceError}
+            onRetry={refetchEvidence}
+          />
+
+          {/* Investigation summary */}
+          <SummarySection summary={investigation.summary} loading={false} />
+
+          {/* Ask about this investigation */}
+          <AskAboutSection investigationId={investigation.id} ticker={ticker} />
+        </>
+      )}
     </div>
   );
 };

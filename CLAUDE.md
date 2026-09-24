@@ -82,33 +82,36 @@ Authenticated endpoints:
 The frontend is structured under `frontend/src/` with clear domain separation:
 
 - `components/`:
-  - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`, `Label`, `Avatar`, `DropdownMenu`) using `class-variance-authority` and `cn()`.
-  - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`, `Skeleton`, `SkeletonCard`, `SkeletonTableRow`).
+  - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`, `Label`, `Avatar`, `DropdownMenu`, `Tabs`, `Table`, `Dialog`) using `class-variance-authority` and `cn()`. `Tabs`, `Table`, and `Dialog` are lightweight, dependency-free primitives built on React context (matching the `DropdownMenu` pattern) with ARIA semantics; `Dialog` supports `asChild` on its trigger.
+  - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`, `Skeleton`, `SkeletonCard`, `SkeletonTableRow`, `SkeletonEvidenceRow`).
   - `auth/`: Route protection guards (`ProtectedRoute` gating authenticated routes with loading state and redirect to `/login`, `GuestRoute` redirecting authenticated users to `/market`).
   - `layout/`: Reusable application shell (`AppShell` with collapsible responsive sidebar, topbar with live IDX status badge, user dropdown menu, page container) and `GlobalSearch` (direct IDX ticker search routing to investigations without fake suggestions or mock data).
 - `hooks/`: Reusable hooks including:
   - `useFormWithSchema`: React Hook Form + Zod resolver integration.
   - `useAuthInit`: Boot-time session recovery via `/auth/me` and window listener for `auth:unauthorized` 401 events.
   - `useMarketData`: Parallel fetching for market intelligence endpoints (`/market/overview`, `/market/movers`, `/market/impact`) using `Promise.allSettled`, independent loading/error states, period switching, and retry triggers.
+  - `useInvestigationDetail`: Loads a single investigation (`GET /investigations/{id}`) first, then the ticker-scoped company endpoints (`market-context`, `impact`) once the real ticker is known. Every section keeps an independent loading/error/refetch state; a failed request never populates another section and never falls back to fabricated data. Uses `AbortController` on ticker/id change.
 - `lib/`:
   - `utils.ts`: `cn()` utility combining `clsx` and `tailwind-merge`.
   - `api-client.ts`: Axios instance with request/response interceptors (token injection, automatic 401 handling) and typed helpers (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`).
   - `api-error.ts`: `ApiError` class and `extractErrorMessage()` adhering to backend error envelope (`code`, `message`, `details`).
   - `dayjs.ts`: Pre-configured Day.js with `relativeTime` and `localizedFormat` plugins, plus formatting helpers.
   - `formatters.ts`: Deterministic formatting utilities for IDR currency (`formatCurrency`), abbreviated market cap (`formatMarketCap`), percentages (`formatPercent`), weight (`formatWeight`), and contribution (`formatContribution`) preserving backend-provided metrics without recalculation.
+  - `investigationEvidence.ts`: Maps backend evidence types to the seven report tabs (Market, Sector, Peers, News, Filings, Financials). Because the backend only emits `price | financial | news | filing | market | other`, Sector is derived from `other` items carrying `data.sub_sector` and Peers from `price` items carrying `data.peers`; the standalone price item appears only under All. Provides filter/count helpers.
+  - `investigationLabels.ts`: Display mappings (labels + semantic badge variants) for alignment, confidence, impact, driver type, evidence type, and status, plus no-clear-catalyst detection and evidence aggregation helpers. No business logic — purely presentation.
 - `models/`: TypeScript interfaces and domain types:
   - `api.ts`: Standard response envelopes (`ApiResponse`, `ApiErrorResponse`, `PaginatedResponse`).
   - `auth.ts`: User, token, request schemas, and `AuthState` (`user`, `token`, `isAuthenticated`, `isLoading`, `isInitialized`, `error`).
   - `market.ts`: Market movers (`MarketMover`, `MoverPeriod`), index points (`IndexClose`), market cap points (`MarketCapPoint`), market overview (`MarketOverview`), contributors (`StockContributor`), market/company impact data (`MarketImpact`, `CompanyImpact`), and API response envelopes.
-  - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`).
+  - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`). Enums mirror `backend/app/models/enums.py` exactly (investigation type/status, confidence, impact level, driver type, evidence type, alignment) — do not add values the backend cannot emit. Also holds the typed response envelopes and the `CompanyMarketContext` model; `CompanyImpact`/`CompanyImpactResponse` live in `market.ts`.
   - `conversation.ts`: Agent chat requests, tool calls, and conversation threads.
 - `pages/`: Route page components:
   - `index.tsx`: Public landing page with dynamic auth navigation buttons.
   - `login.tsx`: User sign-in page with Zod schema validation and Redux thunk dispatch.
   - `register.tsx`: User registration page with password confirmation and auto-redirect.
   - `market.tsx`: Market intelligence dashboard with Indonesian market summary, sector & index performance, top gainers, top losers with period switcher, estimated market contributors, quick stock investigation, real-time ticker filter, neutral-pulse loading skeletons, error states with retry, and direct "Investigate" navigation (`/investigations?ticker=XXXX`).
-  - `investigations/index.tsx`: Investigations list workspace supporting `?ticker=` query param.
-  - `investigations/detail.tsx`: Investigation report detail view with AI assistant trigger.
+  - `investigations/index.tsx`: Investigations list workspace supporting `?ticker=` query param. Hosts the `NewInvestigationDialog` (validated with `analyzeRequestSchema`) that runs `POST /investigations/analyze` and navigates to the created report; a failed analyze shows the real backend error inline and never creates placeholder results.
+  - `investigations/detail.tsx`: Investigation report detail view composing `StockHeaderSection`, `ComparisonSection` (market vs sector), `PeersSection`, `DriversSection`, `ConfidenceImpactSection`, `EvidenceSection` (tabbed), `SummarySection`, and `AskAboutSection`. Section components live in `investigations/components/`. Must clearly distinguish factual evidence (source-attributed, labelled "Fact") from AI interpretation (summary/drivers/verdicts, labelled "Interpretation"), a legitimate "No Clear Catalyst Detected" outcome (warning notice, not an error), and actual system errors (`ErrorDisplay` + retry, never fallback data).
   - `investigations/ai.tsx`: Interactive multi-turn AI investigation chat assistant shell.
   - `profile.tsx`: Authenticated user profile and session settings.
   - `not-found.tsx`: 404 fallback page.
