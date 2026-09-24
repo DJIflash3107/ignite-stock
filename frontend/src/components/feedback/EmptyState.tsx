@@ -1,7 +1,11 @@
 import * as React from 'react';
-import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Empty state.
+ * Radius: 0.25rem. Grouping is communicated with spacing and a single icon
+ * rather than nested circular containers.
+ */
 export interface EmptyStateProps {
   title: string;
   description?: string;
@@ -20,18 +24,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface-card/50 p-10 text-center',
+        'flex flex-col items-center justify-center rounded-[0.25rem] border border-border bg-primary px-6 py-12 text-center',
         className
       )}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary-light border border-border-subtle text-secondary-foreground mb-4">
-        {icon || <Search className="h-6 w-6 text-muted-foreground" />}
-      </div>
-      <h3 className="font-heading text-lg font-semibold text-white">
-        {title}
-      </h3>
+      {icon && (
+        <div className="mb-4 text-muted-foreground" aria-hidden="true">
+          {icon}
+        </div>
+      )}
+      <h3 className="font-heading text-xl font-bold text-white">{title}</h3>
       {description && (
-        <p className="mt-2 max-w-sm text-sm text-secondary-foreground/80 leading-relaxed">
+        <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
           {description}
         </p>
       )}

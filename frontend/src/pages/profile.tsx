@@ -4,11 +4,16 @@ import { Mail, Shield, Calendar, LogOut, CheckCircle2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { logoutUser } from '@/redux/thunks/authThunks';
 import { formatDate } from '@/lib/dayjs';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 
+/**
+ * Profile page.
+ * Left-aligned layout. Account details are presented as a definition list
+ * separated by spacing and rules instead of nested bordered cards. The only
+ * accent is the identity marker; sign-out is a semantic destructive action.
+ */
 export const ProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -19,93 +24,97 @@ export const ProfilePage: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
+  const details = [
+    {
+      icon: Shield,
+      label: 'Account identifier',
+      value: user?.id || '—',
+      mono: true,
+    },
+    {
+      icon: Mail,
+      label: 'Registered email',
+      value: user?.email || '—',
+      mono: false,
+    },
+    {
+      icon: Calendar,
+      label: 'Member since',
+      value: user?.created_at ? formatDate(user.created_at, 'MMMM D, YYYY') : 'Recent',
+      mono: false,
+    },
+    {
+      icon: CheckCircle2,
+      label: 'Security & permissions',
+      value: 'Standard access · Bearer JWT authenticated',
+      mono: false,
+      semantic: 'success' as const,
+    },
+  ];
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="max-w-3xl space-y-8">
       {/* Header */}
-      <div className="border-b border-border/60 pb-5">
-        <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-white">
-          Account Profile
-        </h1>
-        <p className="mt-1 text-sm text-secondary-foreground">
+      <header className="border-b border-border pb-6">
+        <h1 className="font-heading text-3xl font-bold text-white">Account Profile</h1>
+        <p className="mt-2 text-base text-secondary-foreground">
           Manage your credentials, role permissions, and session status.
         </p>
-      </div>
+      </header>
 
-      {/* Profile Overview Card */}
-      <Card className="border-border/80 bg-surface shadow-xl">
-        <CardHeader className="p-6 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Avatar name={user?.name} size="xl" />
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <span>{user?.name || 'Investor'}</span>
-                  <Badge variant="secondary" className="uppercase text-[10px]">
-                    {user?.role || 'user'}
-                  </Badge>
-                </CardTitle>
-                <CardDescription className="text-sm text-secondary-foreground mt-0.5">
-                  {user?.email}
-                </CardDescription>
-              </div>
+      {/* Identity */}
+      <section className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Avatar name={user?.name} size="xl" />
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-heading text-2xl font-bold text-white">
+                {user?.name || 'Investor'}
+              </h2>
+              <Badge variant="secondary">{user?.role || 'user'}</Badge>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="border-rose-900/60 text-rose-300 hover:bg-rose-950/40 hover:text-white"
-            >
-              <LogOut className="h-4 w-4 mr-1.5" />
-              Sign Out
-            </Button>
+            <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="p-6 pt-2 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* User ID Field */}
-            <div className="rounded-xl border border-border/60 bg-secondary-light/60 p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-secondary-foreground/70 mb-1">
-                <Shield className="h-3.5 w-3.5 text-accent" />
-                <span>Account Identifier</span>
-              </div>
-              <p className="font-mono text-xs text-white break-all">{user?.id || '—'}</p>
-            </div>
+        <Button variant="destructive" onClick={handleLogout}>
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          Sign Out
+        </Button>
+      </section>
 
-            {/* Email Field */}
-            <div className="rounded-xl border border-border/60 bg-secondary-light/60 p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-secondary-foreground/70 mb-1">
-                <Mail className="h-3.5 w-3.5 text-accent" />
-                <span>Registered Email</span>
+      {/* Details */}
+      <section>
+        <h3 className="font-heading text-xl font-bold text-white">Account details</h3>
+        <dl className="mt-4 divide-y divide-border border-y border-border">
+          {details.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.label}
+                className="flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8"
+              >
+                <dt className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon
+                    className={
+                      item.semantic === 'success' ? 'h-4 w-4 text-success' : 'h-4 w-4'
+                    }
+                    aria-hidden="true"
+                  />
+                  <span>{item.label}</span>
+                </dt>
+                <dd
+                  className={`text-sm font-bold text-white sm:text-right ${
+                    item.mono ? 'font-mono break-all' : ''
+                  }`}
+                >
+                  {item.value}
+                </dd>
               </div>
-              <p className="text-sm font-medium text-white">{user?.email || '—'}</p>
-            </div>
-
-            {/* Member Since Field */}
-            <div className="rounded-xl border border-border/60 bg-secondary-light/60 p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-secondary-foreground/70 mb-1">
-                <Calendar className="h-3.5 w-3.5 text-accent" />
-                <span>Member Since</span>
-              </div>
-              <p className="text-sm font-medium text-white">
-                {user?.created_at ? formatDate(user.created_at, 'MMMM D, YYYY') : 'Recent'}
-              </p>
-            </div>
-
-            {/* Account Role */}
-            <div className="rounded-xl border border-border/60 bg-secondary-light/60 p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-secondary-foreground/70 mb-1">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                <span>Security & Permissions</span>
-              </div>
-              <p className="text-sm font-medium text-white">
-                Standard Access • Bearer JWT Authenticated
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            );
+          })}
+        </dl>
+      </section>
     </div>
   );
 };

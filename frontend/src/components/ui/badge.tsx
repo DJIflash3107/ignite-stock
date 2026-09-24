@@ -2,26 +2,28 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
+/**
+ * Badge / selector
+ * ---------------------------------------------------------------------------
+ * Radius: 0.25rem. Caption scale (12px) at weight 700.
+ * `supporting`, `contradictory` and `neutral` map to the permitted semantic
+ * state colors (success / error / warning). `info` is intentionally neutral so
+ * no extra hue is introduced. Every state also carries an icon or label in the
+ * UI so color is never the sole signal.
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export const badgeVariants = cva(
-  'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-accent',
+  'inline-flex items-center gap-1 rounded-[0.25rem] border px-2 py-0.5 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent',
   {
     variants: {
       variant: {
-        default:
-          'border-transparent bg-accent text-white',
-        secondary:
-          'border-border-subtle bg-secondary text-secondary-foreground',
-        outline:
-          'border-border text-secondary-foreground',
-        supporting:
-          'border-emerald-600/30 bg-emerald-950/60 text-emerald-400',
-        contradictory:
-          'border-rose-600/30 bg-rose-950/60 text-rose-400',
-        neutral:
-          'border-amber-600/30 bg-amber-950/60 text-amber-300',
-        info:
-          'border-cyan-600/30 bg-cyan-950/60 text-cyan-300',
+        default: 'border-transparent bg-accent text-white',
+        secondary: 'border-border bg-secondary-light text-foreground',
+        outline: 'border-border text-secondary-foreground',
+        supporting: 'border-success/40 bg-success/10 text-success',
+        contradictory: 'border-danger/40 bg-danger/10 text-danger',
+        neutral: 'border-warning/40 bg-warning/10 text-warning',
+        info: 'border-border bg-surface-hover text-secondary-foreground',
       },
     },
     defaultVariants: {

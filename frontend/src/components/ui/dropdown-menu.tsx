@@ -72,7 +72,10 @@ export const DropdownMenuTrigger = React.forwardRef<
     <button
       ref={ref}
       type="button"
-      className={cn('inline-flex items-center justify-center cursor-pointer', className)}
+      className={cn(
+        'inline-flex items-center justify-center cursor-pointer rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary',
+        className
+      )}
       aria-expanded={open}
       aria-haspopup="menu"
       onClick={(e) => {
@@ -106,7 +109,7 @@ export const DropdownMenuContent = React.forwardRef<
       role="menu"
       style={{ marginTop: sideOffset, ...style }}
       className={cn(
-        'absolute z-50 min-w-[13rem] rounded-xl border border-border bg-surface-card p-1.5 text-foreground shadow-2xl shadow-black/60 focus:outline-none animate-fadeIn backdrop-blur-md',
+        'absolute z-50 min-w-[13rem] rounded-[0.25rem] border border-border bg-primary p-1 text-foreground shadow-lg shadow-black/40 focus:outline-none animate-fadeIn',
         align === 'right' ? 'right-0' : 'left-0',
         className
       )}
@@ -135,9 +138,9 @@ export const DropdownMenuItem = React.forwardRef<
       role="menuitem"
       tabIndex={disabled ? -1 : 0}
       className={cn(
-        'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition-colors duration-150',
+        'relative flex cursor-pointer select-none items-center gap-2 rounded-[0.25rem] px-3 py-2.5 text-sm font-bold outline-none transition-colors duration-150',
         destructive
-          ? 'text-rose-400 hover:bg-rose-950/40 hover:text-rose-300'
+          ? 'text-danger hover:bg-danger/10 hover:text-white'
           : 'text-secondary-foreground hover:bg-surface-hover hover:text-white',
         disabled && 'pointer-events-none opacity-50',
         className
@@ -171,7 +174,7 @@ export const DropdownMenuSeparator = React.forwardRef<
   <div
     ref={ref}
     role="separator"
-    className={cn('-mx-1.5 my-1.5 h-px bg-border/60', className)}
+    className={cn('-mx-1 my-1 h-px bg-border', className)}
     {...props}
   />
 ));
@@ -183,10 +186,7 @@ export const DropdownMenuLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
-      'px-3 py-2 text-xs font-semibold uppercase tracking-wider text-secondary-foreground/60',
-      className
-    )}
+    className={cn('px-3 py-2 text-sm font-bold text-white', className)}
     {...props}
   />
 ));

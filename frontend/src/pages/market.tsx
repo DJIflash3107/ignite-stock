@@ -43,6 +43,13 @@ const PERIOD_OPTIONS: { label: string; value: MoverPeriod }[] = [
   { label: '1Y', value: '365d' },
 ];
 
+/**
+ * Market intelligence page.
+ * Layout: one dominant left alignment, 8px spacing rhythm, 0.25rem radii.
+ * Accent is reserved for the single primary CTA per view. Gainers/losers use
+ * the permitted semantic success/danger colors, always paired with a label or
+ * icon so color is never the sole signal.
+ */
 export const MarketPage: React.FC = () => {
   const navigate = useNavigate();
   const [tickerQuery, setTickerQuery] = useState('');
@@ -87,7 +94,6 @@ export const MarketPage: React.FC = () => {
     navigate(`/investigations?ticker=${ticker.trim().toUpperCase()}`);
   };
 
-  // Derive latest market cap point and price change
   const latestMarketCapPoint = useMemo(() => {
     if (!overview?.market_cap_series || overview.market_cap_series.length === 0) {
       return null;
@@ -95,7 +101,6 @@ export const MarketPage: React.FC = () => {
     return overview.market_cap_series[overview.market_cap_series.length - 1];
   }, [overview]);
 
-  // Filter gainers by search query
   const filteredGainers = useMemo(() => {
     if (!tickerQuery.trim()) return gainers;
     const q = tickerQuery.trim().toLowerCase();
@@ -106,7 +111,6 @@ export const MarketPage: React.FC = () => {
     );
   }, [gainers, tickerQuery]);
 
-  // Filter losers by search query
   const filteredLosers = useMemo(() => {
     if (!tickerQuery.trim()) return losers;
     const q = tickerQuery.trim().toLowerCase();
@@ -117,7 +121,6 @@ export const MarketPage: React.FC = () => {
     );
   }, [losers, tickerQuery]);
 
-  // Filter contributors by search query
   const filteredContributors = useMemo(() => {
     const list = impact?.top_contributors || [];
     if (!tickerQuery.trim()) return list;
@@ -129,7 +132,6 @@ export const MarketPage: React.FC = () => {
     );
   }, [impact, tickerQuery]);
 
-  // Filter and classify index / sector series
   const filteredIndexSeries = useMemo(() => {
     const list = overview?.index_series || [];
     const q = tickerQuery.trim().toLowerCase();
@@ -145,101 +147,92 @@ export const MarketPage: React.FC = () => {
     });
   }, [overview, tickerQuery, indexTab]);
 
+  const isBusy = isRefreshingAll || overviewLoading || moversLoading || impactLoading;
+
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-center lg:justify-between">
+      {/* Page header */}
+      <header className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-heading text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h1 className="font-heading text-3xl font-bold text-white">
               Market Intelligence
             </h1>
-            <Badge variant="supporting" className="text-xs">
-              Live IDX
-            </Badge>
+            <Badge variant="supporting">Live IDX</Badge>
             {overview?.end && (
-              <Badge variant="secondary" className="hidden sm:inline-flex text-xs font-mono">
-                <Calendar className="mr-1 h-3 w-3" />
+              <Badge variant="secondary" className="hidden font-mono sm:inline-flex">
+                <Calendar className="mr-1 h-3 w-3" aria-hidden="true" />
                 Updated {formatDate(overview.end)}
               </Badge>
             )}
           </div>
-          <p className="mt-1.5 text-sm text-secondary-foreground leading-relaxed max-w-2xl">
+          <p className="mt-2 max-w-2xl text-base text-secondary-foreground leading-relaxed">
             Deterministic Indonesian market analytics, benchmark impact, and real-time movers powered by Sectors Financial API.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefreshAll}
-            disabled={isRefreshingAll || overviewLoading || moversLoading || impactLoading}
-            className="border-border hover:bg-surface-hover text-secondary-foreground"
+            disabled={isBusy}
           >
             <RefreshCw
-              className={`mr-1.5 h-3.5 w-3.5 ${
-                isRefreshingAll || overviewLoading || moversLoading || impactLoading
-                  ? 'animate-spin text-accent'
-                  : ''
-              }`}
+              className={`h-4 w-4 ${isBusy ? 'animate-spin' : ''}`}
+              aria-hidden="true"
             />
             <span>Refresh</span>
           </Button>
 
           <Button
             variant="default"
-            size="sm"
             onClick={() => navigate('/investigations')}
-            className="shadow-sm shadow-accent/25"
           >
-            <SearchCode className="mr-1.5 h-4 w-4" />
+            <SearchCode className="h-4 w-4" aria-hidden="true" />
             <span>Launch Investigation</span>
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* Global Ticker Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-surface/60 p-3 rounded-xl border border-border/70">
+      {/* Global filter */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-foreground/60" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             value={tickerQuery}
             onChange={(e) => setTickerQuery(e.target.value)}
-            placeholder="Filter gainers, losers, sectors, and contributors by ticker or company name..."
-            className="pl-9 bg-secondary/80 border-border text-sm placeholder:text-secondary-foreground/50 focus:border-accent"
+            placeholder="Filter gainers, losers, sectors, and contributors by ticker or company name"
+            className="pl-9"
           />
         </div>
         {tickerQuery && (
           <Button
             variant="ghost"
-            size="sm"
             onClick={() => setTickerQuery('')}
-            className="text-xs text-secondary-foreground hover:text-white"
           >
-            Clear Filter
+            Clear filter
           </Button>
         )}
       </div>
 
-      {/* SECTION 1: Indonesian Market Summary */}
+      {/* SECTION 1: Market summary */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <BarChart2 className="h-5 w-5 text-accent" />
-            <h2 className="font-heading text-lg font-semibold text-white">
+            <BarChart2 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <h2 className="font-heading text-2xl font-bold text-white">
               Indonesian Market Summary
             </h2>
           </div>
           {overview?.start && overview?.end && (
-            <span className="text-xs text-secondary-foreground/70 font-mono">
+            <span className="font-mono text-sm text-muted-foreground">
               Window: {formatDate(overview.start)} — {formatDate(overview.end)}
             </span>
           )}
         </div>
 
         {overviewLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
@@ -251,24 +244,23 @@ export const MarketPage: React.FC = () => {
             onRetry={refetchOverview}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Total IDX Market Cap */}
-            <Card className="bg-surface-card border-border/80 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-transparent" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* Total IDX market cap */}
+            <Card>
               <CardHeader className="p-5 pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-foreground/80">
-                    Total IDX Market Cap
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Total IDX market cap
                   </span>
                   {overview?.market_cap_change?.percentage !== undefined &&
                   overview.market_cap_change.percentage !== null &&
                   overview.market_cap_change.percentage >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-emerald-400" />
+                    <TrendingUp className="h-4 w-4 text-success" aria-hidden="true" />
                   ) : (
-                    <TrendingDown className="h-4 w-4 text-rose-400" />
+                    <TrendingDown className="h-4 w-4 text-danger" aria-hidden="true" />
                   )}
                 </div>
-                <CardTitle className="text-2xl font-bold font-mono tracking-tight text-white mt-1">
+                <CardTitle className="mt-1 font-mono text-2xl">
                   {latestMarketCapPoint
                     ? formatMarketCap(latestMarketCapPoint.idx_total_market_cap)
                     : '—'}
@@ -284,21 +276,21 @@ export const MarketPage: React.FC = () => {
                           ? 'supporting'
                           : 'contradictory'
                       }
-                      className="text-xs font-mono font-bold"
+                      className="font-mono"
                     >
                       {formatPercent(overview.market_cap_change.percentage)}
                     </Badge>
                   ) : (
-                    <span className="text-xs text-secondary-foreground/60">—</span>
+                    <span className="text-sm text-muted-foreground">—</span>
                   )}
                   {overview?.market_cap_change?.absolute !== undefined &&
                     overview.market_cap_change.absolute !== null && (
-                      <span className="text-xs text-secondary-foreground font-mono">
+                      <span className="font-mono text-sm text-secondary-foreground">
                         ({formatMarketCap(overview.market_cap_change.absolute)})
                       </span>
                     )}
                 </div>
-                <p className="text-xs text-secondary-foreground/70">
+                <p className="text-sm text-muted-foreground">
                   {latestMarketCapPoint
                     ? `Latest trading close as of ${formatDate(latestMarketCapPoint.date)}`
                     : 'Comprehensive IDX universe valuation'}
@@ -306,23 +298,22 @@ export const MarketPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Benchmark Index Impact */}
-            <Card className="bg-surface-card border-border/80 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-cyan-600/70 to-transparent" />
+            {/* Benchmark index impact */}
+            <Card>
               <CardHeader className="p-5 pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-foreground/80">
-                    Benchmark Index ({impact?.index_code || 'IHSG'})
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Benchmark index ({impact?.index_code || 'IHSG'})
                   </span>
-                  <Badge variant="info" className="text-[10px] uppercase font-mono">
+                  <Badge variant="secondary" className="font-mono">
                     {impact?.weight_source || 'Cap Weighted'}
                   </Badge>
                 </div>
-                <CardTitle className="text-2xl font-bold font-mono tracking-tight text-white mt-1">
+                <CardTitle className="mt-1 font-mono text-2xl">
                   {impact?.index_return !== null && impact?.index_return !== undefined ? (
                     <span
                       className={
-                        impact.index_return >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        impact.index_return >= 0 ? 'text-success' : 'text-danger'
                       }
                     >
                       {formatPercent(impact.index_return)}
@@ -333,19 +324,19 @@ export const MarketPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-0 space-y-2">
-                <div className="flex items-center justify-between text-xs text-secondary-foreground">
-                  <span>Market Return:</span>
-                  <span className="font-mono font-medium text-white">
+                <div className="flex items-center justify-between text-sm text-secondary-foreground">
+                  <span>Market return</span>
+                  <span className="font-mono text-white">
                     {formatPercent(impact?.market_return)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-secondary-foreground">
-                  <span>Relative Performance:</span>
+                <div className="flex items-center justify-between text-sm text-secondary-foreground">
+                  <span>Relative performance</span>
                   <span
-                    className={`font-mono font-medium ${
+                    className={`font-mono ${
                       (impact?.relative_performance ?? 0) >= 0
-                        ? 'text-emerald-400'
-                        : 'text-rose-400'
+                        ? 'text-success'
+                        : 'text-danger'
                     }`}
                   >
                     {formatPercent(impact?.relative_performance)}
@@ -354,43 +345,38 @@ export const MarketPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Market Breadth & Movers Status */}
-            <Card className="bg-surface-card border-border/80 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-600/70 to-transparent" />
+            {/* Market breadth */}
+            <Card>
               <CardHeader className="p-5 pb-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-foreground/80">
-                    Active Market Breadth
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Active market breadth
                   </span>
-                  <Badge variant="outline" className="text-xs font-mono">
-                    {period.toUpperCase()} Window
+                  <Badge variant="secondary" className="font-mono">
+                    {period.toUpperCase()} window
                   </Badge>
                 </div>
-                <CardTitle className="text-2xl font-bold font-mono tracking-tight text-white mt-1">
+                <CardTitle className="mt-1 font-mono text-2xl">
                   {gainers.length + losers.length}{' '}
-                  <span className="text-sm font-normal text-secondary-foreground">
-                    Ranked Movers
+                  <span className="text-base font-normal text-secondary-foreground">
+                    ranked movers
                   </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-5 pt-0 space-y-2">
-                <div className="flex items-center gap-3 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    <span className="text-secondary-foreground">Top Gainers:</span>
-                    <span className="font-mono font-bold text-emerald-400">
-                      {gainers.length}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-rose-400" />
-                    <span className="text-secondary-foreground">Top Losers:</span>
-                    <span className="font-mono font-bold text-rose-400">
-                      {losers.length}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-2 text-secondary-foreground">
+                    <TrendingUp className="h-4 w-4 text-success" aria-hidden="true" />
+                    Gainers
+                    <span className="font-mono text-success">{gainers.length}</span>
+                  </span>
+                  <span className="flex items-center gap-2 text-secondary-foreground">
+                    <TrendingDown className="h-4 w-4 text-danger" aria-hidden="true" />
+                    Losers
+                    <span className="font-mono text-danger">{losers.length}</span>
+                  </span>
                 </div>
-                <p className="text-xs text-secondary-foreground/70">
+                <p className="text-sm text-muted-foreground">
                   Calculated deterministically via Sectors API top changes universe.
                 </p>
               </CardContent>
@@ -399,64 +385,52 @@ export const MarketPage: React.FC = () => {
         )}
       </section>
 
-      {/* SECTION 2: Sector & Index Performance */}
+      {/* SECTION 2: Sector & index performance */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-accent" />
-            <h2 className="font-heading text-lg font-semibold text-white">
-              Sector & Index Performance
+            <Layers className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <h2 className="font-heading text-2xl font-bold text-white">
+              Sector &amp; Index Performance
             </h2>
             {overview?.index_series && (
-              <Badge variant="outline" className="text-xs font-mono">
-                {filteredIndexSeries.length} Indices
+              <Badge variant="secondary" className="font-mono">
+                {filteredIndexSeries.length} indices
               </Badge>
             )}
           </div>
 
-          {/* Filter Tabs */}
-          <div className="inline-flex rounded-lg bg-secondary p-1 border border-border">
-            <button
-              type="button"
-              onClick={() => setIndexTab('all')}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                indexTab === 'all'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-secondary-foreground hover:text-white'
-              }`}
-            >
-              All Indices
-            </button>
-            <button
-              type="button"
-              onClick={() => setIndexTab('sectors')}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                indexTab === 'sectors'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-secondary-foreground hover:text-white'
-              }`}
-            >
-              Sectors
-            </button>
-            <button
-              type="button"
-              onClick={() => setIndexTab('benchmarks')}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                indexTab === 'benchmarks'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-secondary-foreground hover:text-white'
-              }`}
-            >
-              Benchmarks
-            </button>
+          {/* Filter tabs */}
+          <div className="inline-flex rounded-[0.25rem] border border-border bg-secondary p-1">
+            {(
+              [
+                { label: 'All Indices', value: 'all' },
+                { label: 'Sectors', value: 'sectors' },
+                { label: 'Benchmarks', value: 'benchmarks' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setIndexTab(tab.value)}
+                aria-pressed={indexTab === tab.value}
+                className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                  indexTab === tab.value
+                    ? 'bg-surface-hover text-white'
+                    : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
         {overviewLoading ? (
-          <Card className="bg-surface-card border-border/80 p-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <Card className="p-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="p-3 rounded-lg bg-surface space-y-2 border border-border/50">
+                <div key={i} className="space-y-2 rounded-[0.25rem] border border-border bg-primary p-3">
                   <Skeleton className="h-4 w-16" />
                   <Skeleton className="h-6 w-24" />
                   <Skeleton className="h-3 w-12" />
@@ -480,38 +454,31 @@ export const MarketPage: React.FC = () => {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {filteredIndexSeries.map((item) => (
               <div
                 key={item.index_code}
-                className="group relative flex flex-col justify-between rounded-xl border border-border/70 bg-surface-card p-3.5 hover:border-accent/50 hover:bg-surface-hover/80 transition-all"
+                className="flex flex-col justify-between rounded-[0.25rem] border border-border bg-surface-card p-4 transition-colors hover:border-accent"
               >
                 <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-heading font-bold text-sm tracking-wide text-white group-hover:text-accent transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-heading text-sm font-bold text-white">
                       {item.index_code}
                     </span>
-                    <Badge
-                      variant={
-                        item.index_code.startsWith('IDX') && item.index_code !== 'IDX30'
-                          ? 'outline'
-                          : 'info'
-                      }
-                      className="text-[9px] px-1.5 py-0 font-mono"
-                    >
+                    <Badge variant="secondary" className="font-mono">
                       {item.index_code.startsWith('IDX') && item.index_code !== 'IDX30'
                         ? 'Sector'
                         : 'Index'}
                     </Badge>
                   </div>
-                  <div className="mt-2.5 font-mono text-base font-semibold text-white">
+                  <div className="mt-2 font-mono text-base font-bold text-white">
                     {item.price.toLocaleString('id-ID', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </div>
                 </div>
-                <div className="mt-2 text-[10px] text-secondary-foreground/60 font-mono">
+                <div className="mt-2 font-mono text-xs text-muted-foreground">
                   {formatDate(item.date)}
                 </div>
               </div>
@@ -520,31 +487,32 @@ export const MarketPage: React.FC = () => {
         )}
       </section>
 
-      {/* SECTIONS 3 & 4: Top Gainers & Top Losers */}
+      {/* SECTION 3 & 4: Top gainers & top losers */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-5 w-5 text-accent" />
-            <h2 className="font-heading text-lg font-semibold text-white">
+            <SlidersHorizontal className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <h2 className="font-heading text-2xl font-bold text-white">
               Market Movers
             </h2>
-            <span className="text-xs text-secondary-foreground/70 hidden sm:inline">
-              Top abnormal price movements across IDX universe
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              Top abnormal price movements across the IDX universe
             </span>
           </div>
 
-          {/* Period Selector Tabs */}
-          <div className="inline-flex rounded-lg bg-secondary p-1 border border-border">
+          {/* Period selector */}
+          <div className="inline-flex rounded-[0.25rem] border border-border bg-secondary p-1">
             {PERIOD_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setPeriod(opt.value)}
                 disabled={moversLoading}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                aria-pressed={period === opt.value}
+                className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 ${
                   period === opt.value
-                    ? 'bg-accent text-white shadow-sm font-semibold'
-                    : 'text-secondary-foreground hover:text-white'
+                    ? 'bg-surface-hover text-white'
+                    : 'text-muted-foreground hover:text-white'
                 }`}
               >
                 {opt.label}
@@ -560,26 +528,24 @@ export const MarketPage: React.FC = () => {
             onRetry={refetchMovers}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Gainers Table */}
-            <Card className="bg-surface-card border-border/80 flex flex-col">
-              <CardHeader className="p-4 border-b border-border/60">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 ring-4 ring-emerald-950/40" />
-                    <CardTitle className="text-base font-semibold text-emerald-300">
-                      Top Gainers
-                    </CardTitle>
-                  </div>
-                  <Badge variant="supporting" className="text-xs font-mono">
-                    {filteredGainers.length} Stocks
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Top gainers */}
+            <Card className="flex flex-col">
+              <CardHeader className="border-b border-border p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <TrendingUp className="h-5 w-5 text-success" aria-hidden="true" />
+                    Top Gainers
+                  </CardTitle>
+                  <Badge variant="supporting" className="font-mono">
+                    {filteredGainers.length} stocks
                   </Badge>
                 </div>
-                <CardDescription className="text-xs text-secondary-foreground/70">
+                <CardDescription>
                   Highest relative price increases in the {period.toUpperCase()} window
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0 flex-1 overflow-x-auto">
+              <CardContent className="flex-1 overflow-x-auto p-0">
                 {moversLoading ? (
                   <table className="w-full text-left text-sm">
                     <tbody>
@@ -602,30 +568,30 @@ export const MarketPage: React.FC = () => {
                 ) : (
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="border-b border-border/60 bg-secondary/40 text-[11px] font-semibold uppercase tracking-wider text-secondary-foreground/80">
-                        <th className="py-2.5 pl-4 pr-2">Ticker</th>
-                        <th className="py-2.5 px-2">Company</th>
-                        <th className="py-2.5 px-2 text-right">Price</th>
-                        <th className="py-2.5 px-2 text-right">Change</th>
-                        <th className="py-2.5 pl-2 pr-4 text-center">Action</th>
+                      <tr className="border-b border-border bg-secondary text-xs font-bold text-muted-foreground">
+                        <th className="py-3 pl-4 pr-2">Ticker</th>
+                        <th className="py-3 px-2">Company</th>
+                        <th className="py-3 px-2 text-right">Price</th>
+                        <th className="py-3 px-2 text-right">Change</th>
+                        <th className="py-3 pl-2 pr-4 text-center">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/40 font-mono text-xs">
+                    <tbody className="divide-y divide-border font-mono text-sm">
                       {filteredGainers.map((stock) => (
                         <tr
                           key={stock.ticker}
-                          className="hover:bg-surface-hover/60 transition-colors group"
+                          className="transition-colors hover:bg-surface-hover"
                         >
-                          <td className="py-3 pl-4 pr-2 font-bold text-white group-hover:text-accent transition-colors">
+                          <td className="py-3 pl-4 pr-2 font-bold text-white">
                             {stock.ticker}
                           </td>
-                          <td className="py-3 px-2 font-sans text-secondary-foreground truncate max-w-[130px] sm:max-w-[180px]">
+                          <td className="max-w-[130px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[180px]">
                             {stock.company_name}
                           </td>
-                          <td className="py-3 px-2 text-right text-white">
+                          <td className="px-2 py-3 text-right text-white">
                             {formatCurrency(stock.last_close_price)}
                           </td>
-                          <td className="py-3 px-2 text-right font-bold text-emerald-400">
+                          <td className="px-2 py-3 text-right font-bold text-success">
                             {formatPercent(stock.price_change)}
                           </td>
                           <td className="py-3 pl-2 pr-4 text-center font-sans">
@@ -633,10 +599,10 @@ export const MarketPage: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleNavigateInvestigation(stock.ticker)}
-                              className="h-7 text-xs border-border/80 hover:border-accent hover:text-accent hover:bg-accent/10 px-2"
+                              className="px-2"
                             >
                               <span>Investigate</span>
-                              <ArrowUpRight className="ml-1 h-3 w-3" />
+                              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
                             </Button>
                           </td>
                         </tr>
@@ -647,25 +613,23 @@ export const MarketPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Top Losers Table */}
-            <Card className="bg-surface-card border-border/80 flex flex-col">
-              <CardHeader className="p-4 border-b border-border/60">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-2.5 w-2.5 rounded-full bg-rose-400 ring-4 ring-rose-950/40" />
-                    <CardTitle className="text-base font-semibold text-rose-300">
-                      Top Losers
-                    </CardTitle>
-                  </div>
-                  <Badge variant="contradictory" className="text-xs font-mono">
-                    {filteredLosers.length} Stocks
+            {/* Top losers */}
+            <Card className="flex flex-col">
+              <CardHeader className="border-b border-border p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <TrendingDown className="h-5 w-5 text-danger" aria-hidden="true" />
+                    Top Losers
+                  </CardTitle>
+                  <Badge variant="contradictory" className="font-mono">
+                    {filteredLosers.length} stocks
                   </Badge>
                 </div>
-                <CardDescription className="text-xs text-secondary-foreground/70">
+                <CardDescription>
                   Steepest price declines in the {period.toUpperCase()} window
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0 flex-1 overflow-x-auto">
+              <CardContent className="flex-1 overflow-x-auto p-0">
                 {moversLoading ? (
                   <table className="w-full text-left text-sm">
                     <tbody>
@@ -688,30 +652,30 @@ export const MarketPage: React.FC = () => {
                 ) : (
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="border-b border-border/60 bg-secondary/40 text-[11px] font-semibold uppercase tracking-wider text-secondary-foreground/80">
-                        <th className="py-2.5 pl-4 pr-2">Ticker</th>
-                        <th className="py-2.5 px-2">Company</th>
-                        <th className="py-2.5 px-2 text-right">Price</th>
-                        <th className="py-2.5 px-2 text-right">Change</th>
-                        <th className="py-2.5 pl-2 pr-4 text-center">Action</th>
+                      <tr className="border-b border-border bg-secondary text-xs font-bold text-muted-foreground">
+                        <th className="py-3 pl-4 pr-2">Ticker</th>
+                        <th className="py-3 px-2">Company</th>
+                        <th className="py-3 px-2 text-right">Price</th>
+                        <th className="py-3 px-2 text-right">Change</th>
+                        <th className="py-3 pl-2 pr-4 text-center">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/40 font-mono text-xs">
+                    <tbody className="divide-y divide-border font-mono text-sm">
                       {filteredLosers.map((stock) => (
                         <tr
                           key={stock.ticker}
-                          className="hover:bg-surface-hover/60 transition-colors group"
+                          className="transition-colors hover:bg-surface-hover"
                         >
-                          <td className="py-3 pl-4 pr-2 font-bold text-white group-hover:text-accent transition-colors">
+                          <td className="py-3 pl-4 pr-2 font-bold text-white">
                             {stock.ticker}
                           </td>
-                          <td className="py-3 px-2 font-sans text-secondary-foreground truncate max-w-[130px] sm:max-w-[180px]">
+                          <td className="max-w-[130px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[180px]">
                             {stock.company_name}
                           </td>
-                          <td className="py-3 px-2 text-right text-white">
+                          <td className="px-2 py-3 text-right text-white">
                             {formatCurrency(stock.last_close_price)}
                           </td>
-                          <td className="py-3 px-2 text-right font-bold text-rose-400">
+                          <td className="px-2 py-3 text-right font-bold text-danger">
                             {formatPercent(stock.price_change)}
                           </td>
                           <td className="py-3 pl-2 pr-4 text-center font-sans">
@@ -719,10 +683,10 @@ export const MarketPage: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleNavigateInvestigation(stock.ticker)}
-                              className="h-7 text-xs border-border/80 hover:border-accent hover:text-accent hover:bg-accent/10 px-2"
+                              className="px-2"
                             >
                               <span>Investigate</span>
-                              <ArrowUpRight className="ml-1 h-3 w-3" />
+                              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
                             </Button>
                           </td>
                         </tr>
@@ -736,35 +700,35 @@ export const MarketPage: React.FC = () => {
         )}
       </section>
 
-      {/* SECTION 5: Estimated Market Contributors */}
+      {/* SECTION 5: Estimated market contributors */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-accent" />
-              <h2 className="font-heading text-lg font-semibold text-white">
+            <div className="flex flex-wrap items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+              <h2 className="font-heading text-2xl font-bold text-white">
                 Estimated Market Contributors
               </h2>
               {impact?.index_code && (
-                <Badge variant="info" className="text-xs font-mono">
+                <Badge variant="secondary" className="font-mono">
                   Index: {impact.index_code}
                 </Badge>
               )}
             </div>
-            <p className="mt-1 text-xs text-secondary-foreground">
+            <p className="mt-2 text-sm text-secondary-foreground">
               Deterministic index movement drivers calculated from market cap weights and price changes.
             </p>
           </div>
 
           {impact?.weight_source && (
-            <Badge variant="outline" className="text-xs font-mono self-start sm:self-auto">
+            <Badge variant="outline" className="self-start font-mono sm:self-auto">
               Source: {impact.weight_source}
             </Badge>
           )}
         </div>
 
         {impactLoading ? (
-          <Card className="bg-surface-card border-border/80 p-4">
+          <Card className="p-4">
             <table className="w-full text-left text-sm">
               <tbody>
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -789,11 +753,11 @@ export const MarketPage: React.FC = () => {
             }
           />
         ) : (
-          <Card className="bg-surface-card border-border/80 overflow-hidden">
+          <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-border/60 bg-secondary/50 text-[11px] font-semibold uppercase tracking-wider text-secondary-foreground/80">
+                  <tr className="border-b border-border bg-secondary text-xs font-bold text-muted-foreground">
                     <th className="py-3 pl-4 pr-2">Rank</th>
                     <th className="py-3 px-2">Ticker</th>
                     <th className="py-3 px-2">Company Name</th>
@@ -804,39 +768,39 @@ export const MarketPage: React.FC = () => {
                     <th className="py-3 pl-2 pr-4 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40 font-mono text-xs">
+                <tbody className="divide-y divide-border font-mono text-sm">
                   {filteredContributors.map((c, idx) => (
                     <tr
                       key={c.ticker}
-                      className="hover:bg-surface-hover/60 transition-colors group"
+                      className="transition-colors hover:bg-surface-hover"
                     >
-                      <td className="py-3 pl-4 pr-2 font-sans text-secondary-foreground/60">
+                      <td className="py-3 pl-4 pr-2 font-sans text-muted-foreground">
                         #{idx + 1}
                       </td>
-                      <td className="py-3 px-2 font-bold text-white group-hover:text-accent transition-colors">
+                      <td className="px-2 py-3 font-bold text-white">
                         {c.ticker}
                       </td>
-                      <td className="py-3 px-2 font-sans text-secondary-foreground truncate max-w-[150px] sm:max-w-[220px]">
+                      <td className="max-w-[150px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[220px]">
                         {c.company_name}
                       </td>
                       <td
-                        className={`py-3 px-2 text-right font-bold ${
-                          c.price_change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                        className={`px-2 py-3 text-right font-bold ${
+                          c.price_change >= 0 ? 'text-success' : 'text-danger'
                         }`}
                       >
                         {formatPercent(c.price_change)}
                       </td>
-                      <td className="py-3 px-2 text-right text-white">
+                      <td className="px-2 py-3 text-right text-white">
                         {formatMarketCap(c.market_cap)}
                       </td>
-                      <td className="py-3 px-2 text-right text-secondary-foreground">
+                      <td className="px-2 py-3 text-right text-secondary-foreground">
                         {formatWeight(c.estimated_weight)}
                       </td>
                       <td
-                        className={`py-3 px-2 text-right font-bold ${
+                        className={`px-2 py-3 text-right font-bold ${
                           c.estimated_contribution >= 0
-                            ? 'text-emerald-400'
-                            : 'text-rose-400'
+                            ? 'text-success'
+                            : 'text-danger'
                         }`}
                       >
                         {formatContribution(c.estimated_contribution)}
@@ -846,10 +810,10 @@ export const MarketPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleNavigateInvestigation(c.ticker)}
-                          className="h-7 text-xs border-border/80 hover:border-accent hover:text-accent hover:bg-accent/10 px-2.5"
+                          className="px-2.5"
                         >
                           <span>Investigate</span>
-                          <ArrowUpRight className="ml-1 h-3 w-3" />
+                          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
                         </Button>
                       </td>
                     </tr>
@@ -861,72 +825,68 @@ export const MarketPage: React.FC = () => {
         )}
       </section>
 
-      {/* SECTION 6: Quick Stock Investigation */}
+      {/* SECTION 6: Quick stock investigation */}
       <section>
-        <Card className="border-accent/40 bg-gradient-to-br from-surface-card via-surface-card to-accent/5 overflow-hidden shadow-lg shadow-black/20">
-          <CardHeader className="p-6 pb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/20 border border-accent/40 text-accent">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-lg font-bold text-white">
-                  Quick Stock Investigation
-                </CardTitle>
-                <CardDescription className="text-xs text-secondary-foreground">
-                  Launch deterministic AI driver analysis and multi-source evidence verification for any IDX stock.
-                </CardDescription>
-              </div>
+        <div className="rounded-[0.25rem] border border-border bg-surface-card p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
+              <Sparkles className="h-5 w-5" aria-hidden="true" />
             </div>
-          </CardHeader>
-          <CardContent className="p-6 pt-3 space-y-4">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleNavigateInvestigation(quickTickerInput);
-              }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
-            >
-              <div className="relative flex-1">
-                <SearchCode className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-foreground/60" />
-                <Input
-                  value={quickTickerInput}
-                  onChange={(e) => setQuickTickerInput(e.target.value.toUpperCase())}
-                  placeholder="Enter 4-letter IDX ticker (e.g. BBCA, BBRI, TLKM)..."
-                  maxLength={6}
-                  className="pl-10 uppercase font-mono font-bold tracking-wider bg-secondary/80 border-border focus:border-accent text-white"
-                />
-              </div>
-              <Button
-                type="submit"
-                variant="default"
-                disabled={!quickTickerInput.trim()}
-                className="shadow-md shadow-accent/20 px-6 shrink-0"
-              >
-                <span>Investigate Ticker</span>
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </form>
+            <div>
+              <h2 className="font-heading text-xl font-bold text-white">
+                Quick Stock Investigation
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Launch deterministic AI driver analysis and multi-source evidence verification for any IDX stock.
+              </p>
+            </div>
+          </div>
 
-            {/* Quick-select chips for popular tickers */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
-              <span className="text-xs text-secondary-foreground/70 mr-1">
-                Popular Tickers:
-              </span>
-              {POPULAR_TICKERS.map((ticker) => (
-                <button
-                  key={ticker}
-                  type="button"
-                  onClick={() => handleNavigateInvestigation(ticker)}
-                  className="inline-flex items-center rounded-md border border-border-subtle bg-secondary/90 px-2.5 py-1 text-xs font-mono font-semibold text-secondary-foreground hover:border-accent hover:text-accent hover:bg-accent/10 transition-all"
-                >
-                  {ticker}
-                  <ArrowUpRight className="ml-1 h-3 w-3 opacity-60" />
-                </button>
-              ))}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleNavigateInvestigation(quickTickerInput);
+            }}
+            className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center"
+          >
+            <div className="relative flex-1">
+              <SearchCode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Input
+                value={quickTickerInput}
+                onChange={(e) => setQuickTickerInput(e.target.value.toUpperCase())}
+                placeholder="Enter IDX ticker (e.g. BBCA, BBRI, TLKM)"
+                maxLength={6}
+                className="pl-9 uppercase font-mono font-bold"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={!quickTickerInput.trim()}
+              className="shrink-0"
+            >
+              <span>Investigate Ticker</span>
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </form>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+            <span className="mr-1 text-sm text-muted-foreground">
+              Popular tickers:
+            </span>
+            {POPULAR_TICKERS.map((ticker) => (
+              <button
+                key={ticker}
+                type="button"
+                onClick={() => handleNavigateInvestigation(ticker)}
+                className="inline-flex items-center gap-1 rounded-[0.25rem] border border-border bg-secondary px-3 py-1.5 font-mono text-sm font-bold text-secondary-foreground transition-colors hover:border-accent hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                {ticker}
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

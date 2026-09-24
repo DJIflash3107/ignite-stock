@@ -83,28 +83,30 @@ The frontend is structured under `frontend/src/` with clear domain separation:
 
 - `components/`:
   - `ui/`: shadcn/ui primitives (`Button`, `Card`, `Badge`, `Input`, `Label`, `Avatar`, `DropdownMenu`) using `class-variance-authority` and `cn()`.
-  - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`).
+  - `feedback/`: Reusable feedback components (`LoadingSpinner`, `ErrorDisplay`, `EmptyState`, `FormError`, `Skeleton`, `SkeletonCard`, `SkeletonTableRow`).
   - `auth/`: Route protection guards (`ProtectedRoute` gating authenticated routes with loading state and redirect to `/login`, `GuestRoute` redirecting authenticated users to `/market`).
   - `layout/`: Reusable application shell (`AppShell` with collapsible responsive sidebar, topbar with live IDX status badge, user dropdown menu, page container) and `GlobalSearch` (direct IDX ticker search routing to investigations without fake suggestions or mock data).
 - `hooks/`: Reusable hooks including:
   - `useFormWithSchema`: React Hook Form + Zod resolver integration.
   - `useAuthInit`: Boot-time session recovery via `/auth/me` and window listener for `auth:unauthorized` 401 events.
+  - `useMarketData`: Parallel fetching for market intelligence endpoints (`/market/overview`, `/market/movers`, `/market/impact`) using `Promise.allSettled`, independent loading/error states, period switching, and retry triggers.
 - `lib/`:
   - `utils.ts`: `cn()` utility combining `clsx` and `tailwind-merge`.
   - `api-client.ts`: Axios instance with request/response interceptors (token injection, automatic 401 handling) and typed helpers (`apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`).
   - `api-error.ts`: `ApiError` class and `extractErrorMessage()` adhering to backend error envelope (`code`, `message`, `details`).
   - `dayjs.ts`: Pre-configured Day.js with `relativeTime` and `localizedFormat` plugins, plus formatting helpers.
+  - `formatters.ts`: Deterministic formatting utilities for IDR currency (`formatCurrency`), abbreviated market cap (`formatMarketCap`), percentages (`formatPercent`), weight (`formatWeight`), and contribution (`formatContribution`) preserving backend-provided metrics without recalculation.
 - `models/`: TypeScript interfaces and domain types:
   - `api.ts`: Standard response envelopes (`ApiResponse`, `ApiErrorResponse`, `PaginatedResponse`).
   - `auth.ts`: User, token, request schemas, and `AuthState` (`user`, `token`, `isAuthenticated`, `isLoading`, `isInitialized`, `error`).
-  - `market.ts`: Market movers, index points, contributors, and market/company impact data.
+  - `market.ts`: Market movers (`MarketMover`, `MoverPeriod`), index points (`IndexClose`), market cap points (`MarketCapPoint`), market overview (`MarketOverview`), contributors (`StockContributor`), market/company impact data (`MarketImpact`, `CompanyImpact`), and API response envelopes.
   - `investigation.ts`: Investigations, ranked drivers, and tri-state evidence items (`supporting`, `contradictory`, `neutral`).
   - `conversation.ts`: Agent chat requests, tool calls, and conversation threads.
 - `pages/`: Route page components:
   - `index.tsx`: Public landing page with dynamic auth navigation buttons.
   - `login.tsx`: User sign-in page with Zod schema validation and Redux thunk dispatch.
   - `register.tsx`: User registration page with password confirmation and auto-redirect.
-  - `market.tsx`: Market intelligence dashboard overview shell.
+  - `market.tsx`: Market intelligence dashboard with Indonesian market summary, sector & index performance, top gainers, top losers with period switcher, estimated market contributors, quick stock investigation, real-time ticker filter, neutral-pulse loading skeletons, error states with retry, and direct "Investigate" navigation (`/investigations?ticker=XXXX`).
   - `investigations/index.tsx`: Investigations list workspace supporting `?ticker=` query param.
   - `investigations/detail.tsx`: Investigation report detail view with AI assistant trigger.
   - `investigations/ai.tsx`: Interactive multi-turn AI investigation chat assistant shell.
@@ -117,12 +119,39 @@ The frontend is structured under `frontend/src/` with clear domain separation:
   - `thunks/`: Async thunks (`authThunks.ts`: `loginUser`, `registerUser`, `fetchCurrentUser`, `logoutUser`).
 - `schema/`: Zod validation schemas for forms (`auth.ts` for login/registration, `investigation.ts` for queries).
 
-Design system tokens (Tailwind CSS 4 `@theme` in `src/index.css`):
-- 60% Primary: `#282a36` (cards, surfaces, toolbars)
-- 30% Secondary: `#1f202a` (background, deep contrast surfaces)
-- 10% Accent: `#ea6947` (brand highlights, action CTAs, key status indicators)
-- Headings: `Montserrat`
-- Body: `Open Sans`
+## Frontend design system
+
+The UI follows a strict design system defined as Tailwind CSS 4 `@theme` tokens in `src/index.css`. Treat these rules as binding when adding or editing UI.
+
+Color — strict 60/30/10 distribution:
+- 60% base surfaces: `--color-primary` `#282a36` (page content, cards, panels).
+- 30% navigation / secondary surfaces: `--color-secondary` `#1f202a` (sidebar, topbar, auth pages, alternating marketing sections).
+- 10% accent: `--color-accent` `#ea6947` — reserved for the single primary CTA per screen and brand marks only.
+- Black, white, and grayscale are allowed for text, icons, and muted elements (`--color-foreground`, `--color-muted-foreground`, `--color-border`, `--color-surface-hover`).
+- Additional hues are allowed only for semantic states: `--color-success`, `--color-warning`, `--color-danger` (error / success / warning / pending / destructive).
+
+Border radius — one value everywhere: `0.25rem`. All `--radius-*` tokens are pinned to `0.25rem`, and components use `rounded-[0.25rem]` explicitly. No large or pill radii; the only exception is intentional 2px status dots (`rounded-full` on `h-2 w-2` markers).
+
+Typography:
+- Headings: `Raleway` (`--font-heading`, loaded via Google Fonts in `index.html`).
+- Body: `Open Sans` (`--font-body`).
+- Weights: only `400` and `700` (use `font-bold`, never `font-semibold`/`font-medium`/`font-extrabold`).
+- Sizes: body `16px`; H1 `32–36px`; H2 `24–30px`; H3 `20–24px`; captions `12–14px`. Even font sizes only; reduced letter spacing on large text.
+
+Layout:
+- Prefer left alignment over centered content (centered text is reserved for empty states and short callouts).
+- Minimize nested containers, borders, and shadows; express hierarchy with spacing, alignment, and typography.
+- Keep to an 8px spacing rhythm.
+
+Buttons and interaction:
+- One `#ea6947` primary CTA per screen; all other actions use the neutral `secondary`/`outline`/`ghost` variants or the semantic `destructive` variant.
+- Minimum 48px target size (default button and input height is `h-12`).
+
+Accessibility:
+- Minimum contrast `4.5:1` for small text and `3:1` for large text.
+- Never signal state by color alone — pair semantic colors with an icon or text label.
+
+Forbidden effects: no gradients, glassmorphism, glow, neon, backdrop blur, or decorative visual effects. Skeletons use a neutral pulse (no shimmer gradient).
 
 Path alias: `@/*` resolves to `frontend/src/*` via Vite and tsconfig.
 

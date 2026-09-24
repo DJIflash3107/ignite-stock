@@ -3,6 +3,10 @@ import type { FieldError } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Inline field error.
+ * Caption scale (14px). Semantic danger color plus an icon.
+ */
 export interface FormErrorProps {
   error?: FieldError | string | null;
   className?: string;
@@ -17,12 +21,12 @@ export const FormError: React.FC<FormErrorProps> = ({ error, className }) => {
   return (
     <div
       className={cn(
-        'mt-1.5 flex items-center gap-1.5 text-xs text-rose-400 font-medium animate-fadeIn',
+        'mt-2 flex items-center gap-1.5 text-sm font-normal text-danger animate-fadeIn',
         className
       )}
       role="alert"
     >
-      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+      <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
       <span>{errorMessage}</span>
     </div>
   );

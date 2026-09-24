@@ -1,97 +1,85 @@
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { SearchCode, Sparkles, Plus, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { SearchCode, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/feedback/EmptyState';
 
+/**
+ * Investigations workspace.
+ * Single accent CTA (New Investigation / Analyze). The ticker banner uses the
+ * accent tint sparingly and content stays left-aligned.
+ */
 export const InvestigationsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const tickerQuery = searchParams.get('ticker')?.toUpperCase();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/60 pb-5">
+      <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-heading text-3xl font-bold text-white">
               Stock Investigations
             </h1>
             {tickerQuery && (
-              <Badge variant="default" className="text-xs uppercase font-mono">
-                Ticker: {tickerQuery}
+              <Badge variant="default" className="font-mono">
+                {tickerQuery}
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-sm text-secondary-foreground">
+          <p className="mt-2 text-base text-secondary-foreground">
             Multi-source anomaly investigation with ranked drivers and tri-state evidence verification.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <Button
+          variant="default"
+          onClick={() => {
+            if (tickerQuery) {
+              navigate(`/investigations/new?ticker=${tickerQuery}`);
+            }
+          }}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          <span>New Investigation</span>
+        </Button>
+      </header>
+
+      {/* Active ticker context */}
+      {tickerQuery && (
+        <div className="flex flex-col gap-4 rounded-[0.25rem] border border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-base font-bold text-white">
+              Target stock: <span className="font-mono text-accent">{tickerQuery}</span>
+            </p>
+            <p className="mt-1 text-sm text-secondary-foreground">
+              Ready to run the 5-node StateGraph investigation pipeline for IDX symbol {tickerQuery}.
+            </p>
+          </div>
           <Button
             variant="default"
-            size="sm"
-            onClick={() => {
-              if (tickerQuery) {
-                // e.g. navigate to a new investigation or open dialog
-                navigate(`/investigations/new?ticker=${tickerQuery}`);
-              }
-            }}
-            className="shadow-sm shadow-accent/20"
+            onClick={() => navigate(`/investigations/${tickerQuery}`)}
+            className="shrink-0"
           >
-            <Plus className="h-4 w-4" />
-            <span>New Investigation</span>
+            Analyze {tickerQuery}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
-      </div>
-
-      {/* Query Banner if ticker is active from global search */}
-      {tickerQuery && (
-        <Card className="border-accent/40 bg-accent/10">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  Target Stock: <span className="font-mono font-bold text-accent">{tickerQuery}</span>
-                </p>
-                <p className="text-xs text-secondary-foreground/80">
-                  Ready to run 5-node StateGraph investigation pipeline for IDX symbol {tickerQuery}.
-                </p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => navigate(`/investigations/${tickerQuery}`)}
-              className="shrink-0"
-            >
-              Analyze {tickerQuery}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
       )}
 
-      {/* Workspace Area */}
-      <Card className="border-border/60 bg-surface/50">
-        <CardContent className="p-8">
-          <EmptyState
-            icon={<SearchCode className="h-8 w-8 text-accent" />}
-            title={tickerQuery ? `No historical reports for ${tickerQuery}` : 'No investigations initiated'}
-            description={
-              tickerQuery
-                ? `Initiate a deterministic investigation for ${tickerQuery} to orchestrate stock movement, peer comparisons, and regulatory filings.`
-                : 'Enter an IDX stock ticker in the top search bar or click "New Investigation" to analyze price movements, market drivers, and corporate filings.'
-            }
-          />
-        </CardContent>
-      </Card>
+      {/* Workspace */}
+      <EmptyState
+        icon={<SearchCode className="h-8 w-8" />}
+        title={tickerQuery ? `No historical reports for ${tickerQuery}` : 'No investigations initiated'}
+        description={
+          tickerQuery
+            ? `Initiate a deterministic investigation for ${tickerQuery} to orchestrate stock movement, peer comparisons, and regulatory filings.`
+            : 'Enter an IDX stock ticker in the top search bar or click "New Investigation" to analyze price movements, market drivers, and corporate filings.'
+        }
+      />
     </div>
   );
 };

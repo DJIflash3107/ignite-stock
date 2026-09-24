@@ -2,29 +2,38 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
+/**
+ * Button system
+ * ---------------------------------------------------------------------------
+ * Only the `default` variant uses the accent color, so a single screen never
+ * shows more than one primary CTA. Every other variant is neutral (grayscale)
+ * or uses a semantic color reserved for destructive actions.
+ *
+ * Radius: 0.25rem. Text: 14px / 16px. Weight: 700 only (400/700 system).
+ * Default height is 48px to keep interactive targets comfortable.
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[0.25rem] font-bold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
   {
     variants: {
       variant: {
-        default:
-          'bg-accent text-white shadow hover:bg-accent-hover active:scale-[0.98]',
-        primary:
-          'bg-primary text-primary-foreground border border-border hover:bg-primary-light active:scale-[0.98]',
+        default: 'bg-accent text-white hover:bg-accent-hover',
         secondary:
-          'bg-secondary-light text-secondary-foreground border border-border-subtle hover:bg-surface hover:text-white active:scale-[0.98]',
+          'bg-secondary-light text-foreground border border-border hover:bg-surface-hover',
         outline:
-          'border border-border bg-transparent text-secondary-foreground hover:bg-surface hover:text-white active:scale-[0.98]',
+          'border border-border bg-transparent text-foreground hover:bg-surface-hover',
         ghost:
-          'hover:bg-surface/70 text-secondary-foreground hover:text-white',
-        link: 'text-accent underline-offset-4 hover:underline p-0 h-auto',
+          'text-secondary-foreground hover:bg-surface-hover hover:text-white',
+        destructive:
+          'border border-danger/50 text-danger hover:bg-danger/10 hover:text-white',
+        link: 'text-accent underline-offset-4 hover:underline p-0 h-auto font-normal',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-12 rounded-lg px-6 text-base font-semibold',
-        icon: 'h-10 w-10 p-0',
+        default: 'h-12 px-6 text-sm',
+        sm: 'h-10 px-4 text-sm',
+        lg: 'h-12 px-8 text-base',
+        icon: 'h-12 w-12 p-0',
       },
     },
     defaultVariants: {
@@ -47,6 +56,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         {...props}
       >
         {isLoading && (
@@ -55,6 +65,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <circle
               className="opacity-25"

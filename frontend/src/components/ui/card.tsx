@@ -1,6 +1,13 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Card primitives
+ * ---------------------------------------------------------------------------
+ * Boxes use a 0.25rem radius and a single neutral border. Shadows are avoided
+ * so hierarchy is carried by spacing, alignment and typography rather than by
+ * decorative containers. Base surface = 60% primary (#282a36).
+ */
 export const Card = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -8,7 +15,7 @@ export const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'rounded-xl border border-border bg-surface-card text-foreground shadow-sm transition-all',
+      'rounded-[0.25rem] border border-border bg-surface-card text-foreground',
       className
     )}
     {...props}
@@ -22,7 +29,7 @@ export const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex flex-col space-y-1.5 p-6', className)}
+    className={cn('flex flex-col gap-1 p-6', className)}
     {...props}
   />
 ));
@@ -35,7 +42,7 @@ export const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      'font-heading text-lg font-semibold leading-none tracking-tight text-white',
+      'font-heading text-xl font-bold leading-tight text-white',
       className
     )}
     {...props}
@@ -49,7 +56,7 @@ export const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-secondary-foreground/80 leading-relaxed', className)}
+    className={cn('text-sm text-muted-foreground leading-relaxed', className)}
     {...props}
   />
 ));

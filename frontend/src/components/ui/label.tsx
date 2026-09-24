@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Field label.
+ * 14px, weight 700, sentence case for scannability. Error state uses the
+ * semantic danger color.
+ */
 export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
   error?: boolean;
 }
@@ -11,8 +16,8 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
       <label
         ref={ref}
         className={cn(
-          'text-xs font-semibold uppercase tracking-wider text-secondary-foreground/90 select-none block mb-1.5',
-          error && 'text-rose-400',
+          'block mb-2 text-sm font-bold text-foreground select-none',
+          error && 'text-danger',
           className
         )}
         {...props}

@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Avatar selector.
+ * Radius: 0.25rem (square, consistent with the rest of the system — no pill
+ * shapes). Uses the accent tint at low opacity as a neutral identity marker.
+ */
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   name?: string;
   src?: string;
@@ -10,8 +15,8 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
 const sizeClasses = {
   sm: 'h-8 w-8 text-xs',
   md: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base font-semibold',
-  xl: 'h-16 w-16 text-lg font-bold',
+  lg: 'h-12 w-12 text-base',
+  xl: 'h-16 w-16 text-xl',
 };
 
 export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
@@ -29,11 +34,11 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       <div
         ref={ref}
         className={cn(
-          'relative inline-flex shrink-0 items-center justify-center rounded-full bg-accent/20 border border-accent/40 font-heading font-semibold text-accent select-none overflow-hidden transition-all',
+          'relative inline-flex shrink-0 items-center justify-center rounded-[0.25rem] bg-accent/15 border border-accent/40 font-heading font-bold text-accent select-none overflow-hidden',
           sizeClasses[size],
           className
         )}
-        aria-label={name || 'User Avatar'}
+        aria-label={name || 'User avatar'}
         role="img"
         {...props}
       >
@@ -44,7 +49,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             className="h-full w-full object-cover"
           />
         ) : (
-          <span>{initials}</span>
+          <span aria-hidden="true">{initials}</span>
         )}
       </div>
     );
