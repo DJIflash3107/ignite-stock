@@ -83,15 +83,6 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary text-foreground font-body">
-      {/* Utility banner */}
-      <div className="border-b border-border bg-secondary-dark px-4 py-2 text-center text-sm text-secondary-foreground">
-        <span className="inline-flex flex-wrap items-center justify-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
-          <span className="font-bold text-white">Live IDX Engine:</span>
-          <span>Deterministic analysis with 7 specialized tools via Sectors Financial API</span>
-        </span>
-      </div>
-
       {/* Navigation header */}
       <header className="sticky top-0 z-40 border-b border-border bg-secondary">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

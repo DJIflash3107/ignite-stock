@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorDisplay } from '@/components/feedback/ErrorDisplay';
 import { Skeleton, SkeletonCard, SkeletonTableRow } from '@/components/feedback/Skeleton';
+import { MarketDateRangePicker } from '@/components/market/MarketDateRangePicker';
 import { useMarketData } from '@/hooks/useMarketData';
 import { formatDate } from '@/lib/dayjs';
 import {
@@ -74,6 +75,10 @@ export const MarketPage: React.FC = () => {
     impactLoading,
     impactError,
     refetchImpact,
+
+    dateRange,
+    setDateRange,
+    resetDateRange,
 
     refetchAll,
   } = useMarketData();
@@ -214,6 +219,13 @@ export const MarketPage: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* Analysis window: drives the summary, sector performance, and contributors */}
+      <MarketDateRangePicker
+        value={dateRange}
+        onChange={setDateRange}
+        onReset={resetDateRange}
+      />
 
       {/* SECTION 1: Market summary */}
       <section className="space-y-4">

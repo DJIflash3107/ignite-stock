@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Controller } from 'react-hook-form';
 import { SearchCode } from 'lucide-react';
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
 import { FormError } from '@/components/feedback/FormError';
 import { useFormWithSchema } from '@/hooks/useFormWithSchema';
 import { analyzeRequestSchema, type AnalyzeRequestFormData } from '@/schema/investigation';
@@ -46,6 +48,7 @@ export const NewInvestigationDialog: React.FC<NewInvestigationDialogProps> = ({
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -112,11 +115,19 @@ export const NewInvestigationDialog: React.FC<NewInvestigationDialogProps> = ({
 
           <div>
             <Label htmlFor="targetDate">Target date</Label>
-            <Input
-              id="targetDate"
-              type="date"
-              error={Boolean(errors.targetDate)}
-              {...register('targetDate')}
+            <Controller
+              control={control}
+              name="targetDate"
+              render={({ field }) => (
+                <DatePicker
+                  id="targetDate"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={Boolean(errors.targetDate)}
+                  placeholder="Pick a target date"
+                />
+              )}
             />
             <FormError error={errors.targetDate} />
           </div>

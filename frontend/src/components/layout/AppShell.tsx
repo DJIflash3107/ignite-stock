@@ -7,8 +7,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -85,16 +83,21 @@ export const AppShell: React.FC = () => {
         )}
       >
         {/* Brand */}
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
-          <NavLink
-            to="/market"
-            className="flex items-center gap-3 overflow-hidden rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </div>
-            {(!isSidebarCollapsed || isMobileMenuOpen) && (
+        <div
+          className={cn(
+            'flex h-16 shrink-0 items-center justify-between border-b border-border px-4',
+            isSidebarCollapsed && 'lg:justify-center'
+          )}
+        >
+          {(!isSidebarCollapsed || isMobileMenuOpen) && (
+            <NavLink
+              to="/market"
+              className="flex items-center gap-3 overflow-hidden rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </div>
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-bold text-white whitespace-nowrap">
                   Ignite<span className="text-accent">Stock</span>
@@ -103,17 +106,32 @@ export const AppShell: React.FC = () => {
                   IDX Intelligence
                 </span>
               </div>
-            )}
-          </NavLink>
+            </NavLink>
+          )}
 
-          <button
-            type="button"
-            className="rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close navigation"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Desktop sidebar collapse toggle — top-right of the sidebar brand row */}
+            <button
+              type="button"
+              className="hidden lg:inline-flex rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+              title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-expanded={!isSidebarCollapsed}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {/* Mobile close */}
+            <button
+              type="button"
+              className="rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close navigation"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation items */}
@@ -130,7 +148,7 @@ export const AppShell: React.FC = () => {
                 title={isSidebarCollapsed ? item.name : undefined}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-[0.25rem] px-3 py-3 text-sm font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  `flex items-center ${!isSidebarCollapsed ? 'gap-3' : 'justify-center'} rounded-[0.25rem] px-3 py-3 text-sm font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`,
                   active
                     ? 'bg-accent text-white'
                     : 'text-secondary-foreground hover:bg-surface-hover hover:text-white'
@@ -163,23 +181,6 @@ export const AppShell: React.FC = () => {
               <Avatar name={user?.name} size="sm" />
             </div>
           )}
-
-          <button
-            type="button"
-            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-            className="hidden lg:flex w-full items-center justify-center gap-2 rounded-[0.25rem] py-3 text-sm font-bold text-secondary-foreground hover:bg-surface-hover hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {isSidebarCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <>
-                <ChevronLeft className="h-4 w-4" />
-                <span>Collapse menu</span>
-              </>
-            )}
-          </button>
         </div>
       </aside>
 

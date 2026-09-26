@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiGet } from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-error';
+import dayjs from '@/lib/dayjs';
 import type {
   MarketOverview,
   MarketOverviewResponse,
@@ -17,8 +18,30 @@ interface SectionState<T> {
   error: string | null;
 }
 
+export interface MarketDateRange {
+  /** Inclusive start date in YYYY-MM-DD. */
+  start: string;
+  /** Inclusive end date in YYYY-MM-DD. */
+  end: string;
+}
+
+/** Default analysis window length in days. */
+export const DEFAULT_RANGE_DAYS = 30;
+/** Maximum analysis window length accepted by the backend. */
+export const MAX_RANGE_DAYS = 90;
+
+/** Default window: the last 30 days ending today (never in the future). */
+export function defaultMarketDateRange(): MarketDateRange {
+  const end = dayjs();
+  return {
+    start: end.subtract(DEFAULT_RANGE_DAYS, 'day').format('YYYY-MM-DD'),
+    end: end.format('YYYY-MM-DD'),
+  };
+}
+
 export function useMarketData() {
   const [period, setPeriod] = useState<MoverPeriod>('1d');
+  const [dateRange, setDateRange] = useState<MarketDateRange>(defaultMarketDateRange);
 
   const [overviewState, setOverviewState] = useState<SectionState<MarketOverview>>({
     data: null,
@@ -44,7 +67,12 @@ export function useMarketData() {
   const fetchOverview = useCallback(async () => {
     setOverviewState((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const response = await apiGet<MarketOverviewResponse>('/market/overview');
+      const response = await apiGet<MarketOverviewResponse>('/market/overview', {
+        params: {
+          start: dateRange.start,
+          end: dateRange.end,
+        },
+      });
       setOverviewState({
         data: response.data.market,
         loading: false,
@@ -57,7 +85,7 @@ export function useMarketData() {
         error: extractErrorMessage(err),
       }));
     }
-  }, []);
+  }, [dateRange.start, dateRange.end]);
 
   const fetchMovers = useCallback(async (activePeriod: MoverPeriod) => {
     setMoversState((prev) => ({ ...prev, loading: true, error: null }));
@@ -87,6 +115,8 @@ export function useMarketData() {
     try {
       const response = await apiGet<MarketImpactResponse>('/market/impact', {
         params: {
+          start: dateRange.start,
+          end: dateRange.end,
           limit: 10,
         },
       });
@@ -102,7 +132,7 @@ export function useMarketData() {
         error: extractErrorMessage(err),
       }));
     }
-  }, []);
+  }, [dateRange.start, dateRange.end]);
 
   // Initial load: fetch all in parallel with independent completion
   const fetchAll = useCallback(async () => {
@@ -113,9 +143,13 @@ export function useMarketData() {
     ]);
   }, [fetchOverview, fetchMovers, fetchImpact, period]);
 
+  // Initial load only: fetch every section once with the current window/period.
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchOverview();
+    fetchMovers(period);
+    fetchImpact();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // When period changes after initial mount, refetch movers only
   useEffect(() => {
@@ -125,6 +159,17 @@ export function useMarketData() {
     }
     fetchMovers(period);
   }, [period, fetchMovers]);
+
+  // When the date range changes after initial mount, refetch the windowed sections.
+  const isRangeInitialMount = useRef(true);
+  useEffect(() => {
+    if (isRangeInitialMount.current) {
+      isRangeInitialMount.current = false;
+      return;
+    }
+    fetchOverview();
+    fetchImpact();
+  }, [fetchOverview, fetchImpact]);
 
   // Derived gainers and losers from movers dataset
   const gainers = (moversState.data || []).filter(
@@ -149,6 +194,10 @@ export function useMarketData() {
     refetchMovers: () => fetchMovers(period),
     period,
     setPeriod,
+
+    dateRange,
+    setDateRange,
+    resetDateRange: () => setDateRange(defaultMarketDateRange()),
 
     impact: impactState.data,
     impactLoading: impactState.loading,

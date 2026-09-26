@@ -143,7 +143,7 @@ async def get_top_changes(
 
 
 async def get_subsector_report(sub_sector: str, sections: str) -> dict[str, Any]:
-    normalized = sub_sector.strip().lower()
+    normalized = sub_sector.strip().lower().replace(" ", "-")
     if not normalized:
         raise SectorsInvalidResponseError("Sectors API requires a non-empty subsector")
     return await _cached(
