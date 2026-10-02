@@ -13,6 +13,7 @@ from typing import Any
 
 from app.helpers.exceptions import AppError, SectorsInvalidResponseError
 from app.models.enums import EvidenceAlignment, ToolCallStatus
+from app.services.sectors_peers import normalize_peers
 from app.services.sectors_service import (
     get_company_filings,
     get_company_news,
@@ -215,7 +216,7 @@ async def tool_get_peer_movements(
     report = await get_company_report(symbol, "peers")
     peers_list = report.get("peers", []) if isinstance(report, dict) else []
 
-    top_peers = peers_list[:limit] if isinstance(peers_list, list) else []
+    top_peers = normalize_peers(peers_list)[:limit]
     if not top_peers:
         return {
             "symbol": symbol.upper(),
@@ -228,10 +229,9 @@ async def tool_get_peer_movements(
     peer_tasks = []
     peer_symbols = []
     for p in top_peers:
-        if isinstance(p, dict) and "symbol" in p:
-            p_sym = str(p["symbol"]).replace(".JK", "").strip()
-            peer_symbols.append(p_sym)
-            peer_tasks.append(get_stock_daily(p_sym, tgt_date - timedelta(days=7), tgt_date))
+        p_sym = str(p["symbol"]).replace(".JK", "").strip()
+        peer_symbols.append(p_sym)
+        peer_tasks.append(get_stock_daily(p_sym, tgt_date - timedelta(days=7), tgt_date))
 
     peer_results = await asyncio.gather(*peer_tasks, return_exceptions=True)
 

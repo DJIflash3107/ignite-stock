@@ -169,6 +169,16 @@ class AllTimePriceRead(BaseModel):
     all_time_low: AllTimePricePointRead | None = None
 
 
+class CompanyPeerRead(BaseModel):
+    symbol: str
+    company_name: str | None = None
+    market_cap: float | None = None
+    pe_ttm: float | None = None
+    pb_mrq: float | None = None
+    yearly_mcap_chg: float | None = None
+    is_self: bool = False
+
+
 class CompanyMarketContextRead(BaseModel):
     ticker: str
     company_name: str
@@ -177,7 +187,7 @@ class CompanyMarketContextRead(BaseModel):
     all_time_price: AllTimePriceRead | None = None
     market_comparison: dict[str, float | None]
     sector_comparison: dict[str, float | None]
-    peers: list[dict[str, Any]]
+    peers: list[CompanyPeerRead]
 
 
 class DateRangeIndexQuery(BaseModel):
@@ -253,7 +263,7 @@ class CompanyImpactRead(BaseModel):
     estimated_weight: float | None
     estimated_contribution: float | None
     weight_source: str = "estimated_market_cap_share"
-    peers: list[dict[str, Any]]
+    peers: list[CompanyPeerRead]
 
 
 class CompanyPriceHistoryQuery(BaseModel):

@@ -25,6 +25,7 @@ from app.helpers.schemas import (
     SectorPerformanceRead,
     StockContributorRead,
 )
+from app.services.sectors_peers import normalize_peers
 from app.services.sectors_service import (
     get_company_report,
     get_idx_total,
@@ -252,11 +253,7 @@ async def get_company_market_context(
             except (TypeError, ValueError) as exc:
                 raise SectorsInvalidResponseError("Sectors API returned invalid sector change data") from exc
 
-    normalized_peers: list[dict] = []
-    for index, peer in enumerate(peers[:peer_limit]):
-        if not isinstance(peer, dict):
-            raise SectorsInvalidResponseError(f"Invalid peer at index {index}")
-        normalized_peers.append(peer)
+    normalized_peers = normalize_peers(peers)[:peer_limit]
     all_time_raw = overview.get("all_time_price") if isinstance(overview, dict) else None
     all_time_price = None
     if isinstance(all_time_raw, dict):
@@ -529,7 +526,7 @@ async def get_company_impact(ticker: str, query: CompanyImpactQuery) -> CompanyI
             estimated_contribution = float(est_w * Decimal(str(stock_return)))
 
     peers = company_report.get("peers")
-    normalized_peers = [p for p in peers if isinstance(p, dict)] if isinstance(peers, list) else []
+    normalized_peers = normalize_peers(peers)
 
     try:
         return CompanyImpactRead(

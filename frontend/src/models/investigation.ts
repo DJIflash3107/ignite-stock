@@ -138,7 +138,12 @@ export interface InvestigationEvidenceResponse {
 /** A single peer entry as returned by the company report / impact endpoints. */
 export interface PeerEntry {
   symbol: string;
-  return?: number | null;
+  company_name?: string | null;
+  market_cap?: number | null;
+  pe_ttm?: number | null;
+  pb_mrq?: number | null;
+  yearly_mcap_chg?: number | null;
+  is_self?: boolean;
   [key: string]: unknown;
 }
 

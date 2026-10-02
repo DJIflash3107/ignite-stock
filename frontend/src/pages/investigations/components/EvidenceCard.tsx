@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CheckCircle2, Database, ExternalLink, MinusCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -38,10 +38,13 @@ export interface EvidenceCardProps {
 
 export const EvidenceCard: React.FC<EvidenceCardProps> = ({ item }) => {
   const hasRawData = item.data && Object.keys(item.data).length > 0;
+  const rawSource = item.data?.source;
+  const sourceUrl =
+    typeof rawSource === 'string' && rawSource.trim() !== '' ? rawSource : null;
 
   return (
     <article className="rounded-[0.25rem] border border-border bg-secondary p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info" className="font-mono">
@@ -69,24 +72,39 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ item }) => {
           </h4>
         </div>
 
-        {hasRawData && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="shrink-0">
+        {(hasRawData || sourceUrl) && (
+          <div className="flex shrink-0 items-center gap-2">
+            {sourceUrl && (
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ variant: 'outline', size: 'sm' })}
+              >
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                <span>Raw data</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Evidence source data</DialogTitle>
-                <DialogDescription>{item.title}</DialogDescription>
-              </DialogHeader>
-              <pre className="mt-4 max-h-[60vh] overflow-auto rounded-[0.25rem] border border-border bg-secondary p-4 font-mono text-xs text-secondary-foreground">
-                {JSON.stringify(item.data, null, 2)}
-              </pre>
-            </DialogContent>
-          </Dialog>
+                <span>Visit Evidence</span>
+              </a>
+            )}
+            {hasRawData && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                    <span>Raw data</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Evidence source data</DialogTitle>
+                    <DialogDescription>{item.title}</DialogDescription>
+                  </DialogHeader>
+                  <pre className="mt-4 max-h-[60vh] overflow-auto rounded-[0.25rem] border border-border bg-secondary p-4 font-mono text-xs text-secondary-foreground">
+                    {JSON.stringify(item.data, null, 2)}
+                  </pre>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         )}
       </div>
 

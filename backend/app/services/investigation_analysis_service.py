@@ -30,6 +30,7 @@ from app.models.enums import (
 from app.models.evidence_item import EvidenceItem
 from app.models.investigation import Investigation
 from app.models.investigation_driver import InvestigationDriver
+from app.services.sectors_peers import normalize_peers
 from app.services.sectors_service import (
     get_company_filings,
     get_company_news,
@@ -199,15 +200,14 @@ async def run_investigation_analysis(
 
     # Peer movement
     peer_returns: list[tuple[str, Decimal]] = []
-    top_peers = peers[:peer_limit] if isinstance(peers, list) else []
+    top_peers = normalize_peers(peers)[:peer_limit]
     if top_peers:
         peer_tasks = []
         peer_tickers = []
         for p in top_peers:
-            if isinstance(p, dict) and "symbol" in p:
-                p_ticker = str(p["symbol"]).replace(".JK", "").strip()
-                peer_tickers.append(p_ticker)
-                peer_tasks.append(get_stock_daily(p_ticker, actual_trade_date - timedelta(days=7), actual_trade_date))
+            p_ticker = str(p["symbol"]).replace(".JK", "").strip()
+            peer_tickers.append(p_ticker)
+            peer_tasks.append(get_stock_daily(p_ticker, actual_trade_date - timedelta(days=7), actual_trade_date))
 
         if peer_tasks:
             peer_results = await asyncio.gather(*peer_tasks, return_exceptions=True)

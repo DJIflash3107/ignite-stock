@@ -93,9 +93,13 @@ export const InvestigationContextPanel: React.FC<InvestigationContextPanelProps>
     investigation?.target_date;
 
   const peers: PeerEntry[] = React.useMemo(() => {
-    if (marketContext?.peers?.length) return marketContext.peers;
-    if (impact?.peers?.length) return impact.peers;
-    return [];
+    const source = marketContext?.peers?.length
+      ? marketContext.peers
+      : impact?.peers?.length
+        ? impact.peers
+        : [];
+    // Exclude the company itself — this card lists peers only.
+    return source.filter((peer) => !peer.is_self);
   }, [marketContext, impact]);
 
   if (investigationLoading) {
@@ -264,14 +268,17 @@ export const InvestigationContextPanel: React.FC<InvestigationContextPanelProps>
             </p>
           ) : (
             <div className="divide-y divide-border">
-              {peers.slice(0, 8).map((peer) => (
-                <ContextMetricRow
-                  key={peer.symbol}
-                  label={peer.symbol}
-                  value={formatPercent(toNumber(peer.return))}
-                  tone={toneFor(toNumber(peer.return))}
-                />
-              ))}
+              {peers.slice(0, 8).map((peer) => {
+                const mcapChg = toNumber(peer.yearly_mcap_chg);
+                return (
+                  <ContextMetricRow
+                    key={peer.symbol}
+                    label={peer.symbol}
+                    value={formatPercent(mcapChg)}
+                    tone={toneFor(mcapChg)}
+                  />
+                );
+              })}
             </div>
           )}
         </CardContent>
