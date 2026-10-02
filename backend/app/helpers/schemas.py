@@ -159,11 +159,22 @@ class SectorPerformanceRead(BaseModel):
     report: dict[str, Any]
 
 
+class AllTimePricePointRead(BaseModel):
+    date: date
+    close: float
+
+
+class AllTimePriceRead(BaseModel):
+    all_time_high: AllTimePricePointRead | None = None
+    all_time_low: AllTimePricePointRead | None = None
+
+
 class CompanyMarketContextRead(BaseModel):
     ticker: str
     company_name: str
     overview: dict[str, Any]
     valuation: dict[str, Any]
+    all_time_price: AllTimePriceRead | None = None
     market_comparison: dict[str, float | None]
     sector_comparison: dict[str, float | None]
     peers: list[dict[str, Any]]
@@ -243,6 +254,41 @@ class CompanyImpactRead(BaseModel):
     estimated_contribution: float | None
     weight_source: str = "estimated_market_cap_share"
     peers: list[dict[str, Any]]
+
+
+class CompanyPriceHistoryQuery(BaseModel):
+    start: date | None = None
+    end: date | None = None
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        self.resolved_dates()
+        return self
+
+    def resolved_dates(self) -> tuple[date, date]:
+        resolved_end = self.end or date.today()
+        resolved_start = self.start or resolved_end - timedelta(days=30)
+        if resolved_start < date(2021, 1, 1):
+            raise ValueError("start must not be earlier than 2021-01-01")
+        if resolved_end > date.today():
+            raise ValueError("end must not be in the future")
+        if resolved_start > resolved_end:
+            raise ValueError("start must not be after end")
+        if (resolved_end - resolved_start).days > 90:
+            raise ValueError("date range must not exceed 90 days")
+        return resolved_start, resolved_end
+
+
+class ClosePricePointRead(BaseModel):
+    date: date
+    close: float
+
+
+class CompanyPriceHistoryRead(BaseModel):
+    ticker: str
+    start: date
+    end: date
+    series: list[ClosePricePointRead]
 
 
 class InvestigationCreate(BaseModel):

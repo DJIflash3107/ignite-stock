@@ -142,11 +142,22 @@ export interface PeerEntry {
   [key: string]: unknown;
 }
 
+export interface AllTimePricePoint {
+  date: string;
+  close: number;
+}
+
+export interface AllTimePrice {
+  all_time_high: AllTimePricePoint | null;
+  all_time_low: AllTimePricePoint | null;
+}
+
 export interface CompanyMarketContext {
   ticker: string;
   company_name: string;
   overview: Record<string, unknown>;
   valuation: Record<string, unknown>;
+  all_time_price?: AllTimePrice | null;
   market_comparison: { company_change: number | null; market_change: number | null };
   sector_comparison: { company_change: number | null; sector_change: number | null };
   peers: PeerEntry[];

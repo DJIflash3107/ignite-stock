@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/feedback/Skeleton';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
 import { formatDate } from '@/lib/dayjs';
 import { STATUS_LABEL, STATUS_VARIANT } from '@/lib/investigationLabels';
-import type { InvestigationDetail } from '@/models/investigation';
+import type { AllTimePricePoint, InvestigationDetail } from '@/models/investigation';
 import { findStockMovementEvidence } from '@/lib/investigationEvidence';
 
 /**
@@ -18,6 +18,29 @@ import { findStockMovementEvidence } from '@/lib/investigationEvidence';
 export interface StockHeaderSectionProps {
   investigation: InvestigationDetail | null;
   loading: boolean;
+  allTimeHigh: AllTimePricePoint | null;
+  allTimeLow: AllTimePricePoint | null;
+  allTimeLoading: boolean;
+}
+
+function AllTimeValue({
+  point,
+  loading,
+}: {
+  point: AllTimePricePoint | null;
+  loading: boolean;
+}) {
+  if (loading) return <Skeleton className="h-6 w-28" />;
+  if (!point) return <>—</>;
+  return (
+    <>
+      {formatCurrency(point.close)}
+      <span className="text-sm font-normal text-muted-foreground">
+        {' · '}
+        {formatDate(point.date, 'DD MMM YYYY')}
+      </span>
+    </>
+  );
 }
 
 function MovementIcon({ value }: { value: number | null }) {
@@ -42,6 +65,9 @@ function toNumber(value: unknown): number | null {
 export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
   investigation,
   loading,
+  allTimeHigh,
+  allTimeLow,
+  allTimeLoading,
 }) => {
   const movementEvidence = React.useMemo(
     () => (investigation ? findStockMovementEvidence(investigation.evidence_items) : undefined),
@@ -114,11 +140,23 @@ export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
       </CardHeader>
 
       <CardContent className="border-t border-border pt-4">
-        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <div>
             <dt className="text-sm text-muted-foreground">Close price</dt>
             <dd className="mt-1 font-mono text-lg font-bold text-foreground">
               {loading ? <Skeleton className="h-6 w-24" /> : formatCurrency(closePrice)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">All-time high</dt>
+            <dd className="mt-1 font-mono text-lg font-bold text-foreground">
+              <AllTimeValue point={allTimeHigh} loading={allTimeLoading} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">All-time low</dt>
+            <dd className="mt-1 font-mono text-lg font-bold text-foreground">
+              <AllTimeValue point={allTimeLow} loading={allTimeLoading} />
             </dd>
           </div>
           <div>

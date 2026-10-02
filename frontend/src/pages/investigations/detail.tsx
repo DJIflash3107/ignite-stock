@@ -6,6 +6,7 @@ import { ErrorDisplay } from '@/components/feedback/ErrorDisplay';
 import { Skeleton, SkeletonCard } from '@/components/feedback/Skeleton';
 import { useInvestigationDetail } from '@/hooks/useInvestigationDetail';
 import { StockHeaderSection } from './components/StockHeaderSection';
+import { PriceHistorySection } from './components/PriceHistorySection';
 import { ComparisonSection } from './components/ComparisonSection';
 import { PeersSection } from './components/PeersSection';
 import { DriversSection } from './components/DriversSection';
@@ -44,6 +45,10 @@ export const InvestigationDetailPage: React.FC = () => {
     impactLoading,
     impactError,
     refetchImpact,
+    priceHistory,
+    priceHistoryLoading,
+    priceHistoryError,
+    refetchPriceHistory,
   } = useInvestigationDetail(id);
 
   const ticker = investigation?.company_ticker ?? null;
@@ -119,7 +124,24 @@ export const InvestigationDetailPage: React.FC = () => {
       ) : (
         <>
           {/* Stock header & latest movement */}
-          <StockHeaderSection investigation={investigation} loading={false} />
+          <StockHeaderSection
+            investigation={investigation}
+            loading={false}
+            allTimeHigh={marketContext?.all_time_price?.all_time_high ?? null}
+            allTimeLow={marketContext?.all_time_price?.all_time_low ?? null}
+            allTimeLoading={marketContextLoading}
+          />
+
+          {/* Daily close price trend */}
+          <PriceHistorySection
+            ticker={ticker}
+            series={priceHistory?.series ?? []}
+            start={priceHistory?.start}
+            end={priceHistory?.end}
+            loading={priceHistoryLoading}
+            error={priceHistoryError}
+            onRetry={refetchPriceHistory}
+          />
 
           {/* Market vs sector + peer comparison */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

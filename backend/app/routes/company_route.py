@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends
 from app.handlers.market_handler import (
     get_company_impact,
     get_company_market_context,
+    get_company_price_history,
 )
 from app.helpers.dependencies import get_current_user
 from app.helpers.exceptions import ValidationAppError
-from app.helpers.schemas import CompanyImpactQuery
+from app.helpers.schemas import CompanyImpactQuery, CompanyPriceHistoryQuery
 
 MAX_PEER_LIMIT = 20
 
@@ -32,4 +33,12 @@ async def company_impact(
     query: CompanyImpactQuery = Depends(),
 ):
     return await get_company_impact(ticker, query)
+
+
+@router.get("/{ticker}/price-history")
+async def price_history(
+    ticker: str,
+    query: CompanyPriceHistoryQuery = Depends(),
+):
+    return await get_company_price_history(ticker, query)
 

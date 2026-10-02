@@ -6,9 +6,14 @@ from pydantic import ValidationError
 
 from app.helpers.exceptions import SectorsInvalidResponseError, ValidationAppError
 from app.helpers.schemas import (
+    AllTimePricePointRead,
+    AllTimePriceRead,
+    ClosePricePointRead,
     CompanyImpactQuery,
     CompanyImpactRead,
     CompanyMarketContextRead,
+    CompanyPriceHistoryQuery,
+    CompanyPriceHistoryRead,
     IndexCloseRead,
     MarketCapPointRead,
     MarketImpactQuery,
@@ -36,6 +41,28 @@ def _required(item: dict, key: str, index: int | None = None):
         suffix = f" at index {index}" if index is not None else ""
         raise SectorsInvalidResponseError(f"Sectors API response missing {key}{suffix}")
     return item[key]
+
+
+def _all_time_point(raw: object) -> AllTimePricePointRead | None:
+    """Normalize a Sectors ``{"<date>": <close>}`` all-time price entry.
+
+    The company-report ``overview.all_time_price`` block exposes each bucket as a
+    single-key map of date to closing price. Missing/empty values return ``None``
+    (the caller renders a dash); a present but malformed value is an upstream
+    error and is surfaced rather than silently dropped.
+    """
+    if not isinstance(raw, dict) or not raw:
+        return None
+    date_str, close = next(iter(raw.items()))
+    try:
+        return AllTimePricePointRead(
+            date=date.fromisoformat(str(date_str)),
+            close=float(close),
+        )
+    except (TypeError, ValueError) as exc:
+        raise SectorsInvalidResponseError(
+            "Sectors API returned invalid all-time price data"
+        ) from exc
 
 
 def _change(first: Decimal, last: Decimal) -> Decimal | None:
@@ -230,18 +257,67 @@ async def get_company_market_context(
         if not isinstance(peer, dict):
             raise SectorsInvalidResponseError(f"Invalid peer at index {index}")
         normalized_peers.append(peer)
+    all_time_raw = overview.get("all_time_price") if isinstance(overview, dict) else None
+    all_time_price = None
+    if isinstance(all_time_raw, dict):
+        all_time_price = AllTimePriceRead(
+            all_time_high=_all_time_point(all_time_raw.get("all_time_high")),
+            all_time_low=_all_time_point(all_time_raw.get("all_time_low")),
+        )
     try:
         return CompanyMarketContextRead(
             ticker=report.get("symbol", normalized_ticker),
             company_name=_required(report, "company_name"),
             overview=overview,
             valuation=valuation,
+            all_time_price=all_time_price,
             market_comparison={"company_change": company_change, "market_change": market_change},
             sector_comparison={"company_change": company_change, "sector_change": sector_change},
             peers=normalized_peers,
         )
     except (ValidationError, TypeError, ValueError) as exc:
         raise SectorsInvalidResponseError("Sectors API returned invalid company context data") from exc
+
+
+async def get_company_price_history(
+    ticker: str,
+    query: CompanyPriceHistoryQuery,
+) -> CompanyPriceHistoryRead:
+    normalized_ticker = ticker.strip().upper()
+    if not normalized_ticker or not normalized_ticker.replace(".", "").isalnum():
+        raise ValidationAppError({"ticker": "ticker must contain only letters, numbers, or a dot"})
+
+    start, end = query.resolved_dates()
+    rows = await get_stock_daily(normalized_ticker, start, end)
+    if not isinstance(rows, list) or not rows:
+        raise SectorsInvalidResponseError(
+            f"Sectors API returned no daily data for {normalized_ticker}"
+        )
+
+    series: list[ClosePricePointRead] = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise SectorsInvalidResponseError(f"Invalid stock daily row at index {index}")
+        try:
+            series.append(ClosePricePointRead(
+                date=_required(row, "date", index),
+                close=_required(row, "close", index),
+            ))
+        except (ValidationError, TypeError, ValueError) as exc:
+            raise SectorsInvalidResponseError(f"Invalid stock daily row at index {index}") from exc
+
+    series.sort(key=lambda point: point.date)
+    try:
+        return CompanyPriceHistoryRead(
+            ticker=normalized_ticker,
+            start=start,
+            end=end,
+            series=series,
+        )
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise SectorsInvalidResponseError(
+            "Sectors API returned invalid stock price history data"
+        ) from exc
 
 
 async def get_market_impact(query: MarketImpactQuery) -> MarketImpactRead:

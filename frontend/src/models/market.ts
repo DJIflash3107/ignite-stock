@@ -112,3 +112,20 @@ export interface MarketImpactResponse {
     impact: MarketImpact;
   };
 }
+
+export interface ClosePricePoint {
+  date: string;
+  close: number;
+}
+
+export interface CompanyPriceHistory {
+  ticker: string;
+  start: string;
+  end: string;
+  series: ClosePricePoint[];
+}
+
+export interface CompanyPriceHistoryResponse {
+  message: { success: string };
+  data: { price_history: CompanyPriceHistory };
+}

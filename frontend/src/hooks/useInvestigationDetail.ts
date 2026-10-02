@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiGet } from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-error';
+import dayjs from '@/lib/dayjs';
 import type {
   CompanyMarketContext,
   CompanyMarketContextResponse,
@@ -11,7 +12,12 @@ import type {
   EvidenceItem,
   InvestigationEvidenceResponse,
 } from '@/models/investigation';
-import type { CompanyImpact, CompanyImpactResponse } from '@/models/market';
+import type {
+  CompanyImpact,
+  CompanyImpactResponse,
+  CompanyPriceHistory,
+  CompanyPriceHistoryResponse,
+} from '@/models/market';
 
 interface SectionState<T> {
   data: T | null;
@@ -48,6 +54,11 @@ export interface UseInvestigationDetailResult {
   impactLoading: boolean;
   impactError: string | null;
   refetchImpact: () => Promise<void>;
+
+  priceHistory: CompanyPriceHistory | null;
+  priceHistoryLoading: boolean;
+  priceHistoryError: string | null;
+  refetchPriceHistory: () => Promise<void>;
 }
 
 /**
@@ -82,6 +93,10 @@ export function useInvestigationDetail(
   const [impactState, setImpactState] = useState<SectionState<CompanyImpact>>(
     initialState(false)
   );
+
+  const [priceHistoryState, setPriceHistoryState] = useState<
+    SectionState<CompanyPriceHistory>
+  >(initialState(false));
 
   // Abort in-flight company requests when the ticker/id changes or on unmount.
   const companyAbortRef = useRef<AbortController | null>(null);
@@ -200,6 +215,37 @@ export function useInvestigationDetail(
     }
   }, []);
 
+  const fetchPriceHistory = useCallback(
+    async (ticker: string, targetDate: string, signal: AbortSignal) => {
+      setPriceHistoryState((prev) => ({ ...prev, loading: true, error: null }));
+      const end = dayjs(targetDate);
+      const params = {
+        start: end.subtract(30, 'day').format('YYYY-MM-DD'),
+        end: end.format('YYYY-MM-DD'),
+      };
+      try {
+        const response = await apiGet<CompanyPriceHistoryResponse>(
+          `/companies/${ticker}/price-history`,
+          { params, signal }
+        );
+        if (signal.aborted) return;
+        setPriceHistoryState({
+          data: response.data.price_history,
+          loading: false,
+          error: null,
+        });
+      } catch (err) {
+        if (signal.aborted) return;
+        setPriceHistoryState((prev) => ({
+          ...prev,
+          loading: false,
+          error: extractErrorMessage(err),
+        }));
+      }
+    },
+    []
+  );
+
   // Load the investigation when the id changes.
   useEffect(() => {
     if (!investigationId) {
@@ -213,21 +259,29 @@ export function useInvestigationDetail(
 
   // Load ticker-scoped endpoints once the ticker is known.
   const ticker = investigationState.data?.company_ticker ?? null;
+  const targetDate = investigationState.data?.target_date ?? null;
   useEffect(() => {
     companyAbortRef.current?.abort();
     if (!ticker) {
       setMarketContextState(initialState(false));
       setImpactState(initialState(false));
+      setPriceHistoryState(initialState(false));
       return;
     }
     const controller = new AbortController();
     companyAbortRef.current = controller;
-    void Promise.allSettled([
+    const tasks = [
       fetchMarketContext(ticker, controller.signal),
       fetchImpact(ticker, controller.signal),
-    ]);
+    ];
+    if (targetDate) {
+      tasks.push(fetchPriceHistory(ticker, targetDate, controller.signal));
+    } else {
+      setPriceHistoryState(initialState(false));
+    }
+    void Promise.allSettled(tasks);
     return () => controller.abort();
-  }, [ticker, fetchMarketContext, fetchImpact]);
+  }, [ticker, targetDate, fetchMarketContext, fetchImpact, fetchPriceHistory]);
 
   const refetchMarketContext = useCallback(async () => {
     if (!ticker) return;
@@ -240,6 +294,12 @@ export function useInvestigationDetail(
     const controller = new AbortController();
     await fetchImpact(ticker, controller.signal);
   }, [ticker, fetchImpact]);
+
+  const refetchPriceHistory = useCallback(async () => {
+    if (!ticker || !targetDate) return;
+    const controller = new AbortController();
+    await fetchPriceHistory(ticker, targetDate, controller.signal);
+  }, [ticker, targetDate, fetchPriceHistory]);
 
   return {
     investigation: investigationState.data,
@@ -266,5 +326,10 @@ export function useInvestigationDetail(
     impactLoading: impactState.loading,
     impactError: impactState.error,
     refetchImpact,
+
+    priceHistory: priceHistoryState.data,
+    priceHistoryLoading: priceHistoryState.loading,
+    priceHistoryError: priceHistoryState.error,
+    refetchPriceHistory,
   };
 }
