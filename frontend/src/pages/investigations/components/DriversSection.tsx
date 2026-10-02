@@ -67,7 +67,7 @@ export const DriversSection: React.FC<DriversSectionProps> = ({
           <div className="flex items-start gap-3 rounded-[0.25rem] border border-warning/40 bg-warning/10 p-5">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
             <div>
-              <p className="font-heading text-lg font-bold text-white">
+              <p className="font-heading text-lg font-bold text-foreground">
                 No clear catalyst detected
               </p>
               <p className="mt-1 text-sm text-secondary-foreground leading-relaxed">
@@ -87,7 +87,7 @@ export const DriversSection: React.FC<DriversSectionProps> = ({
                 className="rounded-[0.25rem] border border-border bg-primary p-5"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-[0.25rem] bg-surface-hover font-mono text-sm font-bold text-white">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-[0.25rem] bg-surface-hover font-mono text-sm font-bold text-foreground">
                     {driver.rank}
                   </span>
                   <Badge variant="secondary" className="font-mono">
@@ -100,7 +100,7 @@ export const DriversSection: React.FC<DriversSectionProps> = ({
                     {IMPACT_LABEL[driver.impact_level]}
                   </Badge>
                 </div>
-                <h4 className="mt-3 font-heading text-lg font-bold text-white">
+                <h4 className="mt-3 font-heading text-lg font-bold text-foreground">
                   {driver.title}
                 </h4>
                 <p className="mt-2 text-sm text-secondary-foreground leading-relaxed">

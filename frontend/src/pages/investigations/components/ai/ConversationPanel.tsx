@@ -49,11 +49,11 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
 
   const intro = (
     <div className="flex gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-accent-foreground">
         <Bot className="h-5 w-5" aria-hidden="true" />
       </div>
       <div className="rounded-[0.25rem] border border-border bg-primary p-4">
-        <p className="flex flex-wrap items-center gap-2 font-heading font-bold text-white">
+        <p className="flex flex-wrap items-center gap-2 font-heading font-bold text-foreground">
           <span>IgniteStock Investigation Agent</span>
           <span className="rounded-[0.25rem] bg-accent/15 px-2 py-0.5 font-mono text-xs font-normal text-accent">
             Grounded on Sectors API

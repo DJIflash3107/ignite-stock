@@ -203,8 +203,8 @@ export const MarketDateRangePicker: React.FC<MarketDateRangePickerProps> = ({
               aria-pressed={activePresetDays === preset.days}
               className={`rounded-[0.25rem] px-3 py-1.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 ${
                 activePresetDays === preset.days
-                  ? 'bg-surface-hover text-white'
-                  : 'text-muted-foreground hover:text-white'
+                  ? 'bg-surface-hover text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {preset.label}

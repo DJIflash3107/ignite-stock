@@ -35,7 +35,7 @@ export const SkeletonCard: React.FC<{ className?: string }> = ({ className }) =>
   return (
     <div
       className={cn(
-        'rounded-[0.25rem] border border-border bg-surface-card p-5 space-y-4',
+        'rounded-[0.25rem] border border-border bg-secondary p-5 space-y-4',
         className
       )}
     >
@@ -77,7 +77,7 @@ export const SkeletonEvidenceRow: React.FC<{ className?: string }> = ({ classNam
   return (
     <div
       className={cn(
-        'space-y-3 rounded-[0.25rem] border border-border bg-surface-card p-5',
+        'space-y-3 rounded-[0.25rem] border border-border bg-secondary p-5',
         className
       )}
     >

@@ -47,7 +47,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
             variant="ghost"
             size="sm"
             onClick={onRetry}
-            className="text-danger hover:bg-danger/15 hover:text-white"
+            className="text-danger hover:bg-danger/15 hover:text-foreground"
           >
             Retry
           </Button>
@@ -66,7 +66,7 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     >
       <div className="flex items-center gap-2 text-danger">
         <AlertCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <h3 className="font-heading text-xl font-bold text-white">{title}</h3>
+        <h3 className="font-heading text-xl font-bold text-foreground">{title}</h3>
       </div>
       <p className="mt-2 max-w-md text-sm text-muted-foreground leading-relaxed">
         {displayMessage}

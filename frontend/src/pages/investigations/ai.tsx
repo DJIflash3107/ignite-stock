@@ -34,7 +34,7 @@ export const InvestigationAiPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Link
             to={`/investigations/${id}`}
-            className="flex items-center gap-1.5 rounded-[0.25rem] text-sm text-secondary-foreground transition-colors hover:text-white"
+            className="flex items-center gap-1.5 rounded-[0.25rem] text-sm text-secondary-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             <span>Investigation Report</span>
@@ -43,7 +43,7 @@ export const InvestigationAiPage: React.FC = () => {
             |
           </span>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-heading text-base font-bold text-white">
+            <span className="font-heading text-base font-bold text-foreground">
               AI Investigation Workspace
             </span>
             {ticker && (
@@ -76,7 +76,7 @@ export const InvestigationAiPage: React.FC = () => {
         >
           <div className="mb-3 flex items-center gap-2">
             <PanelRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            <h2 className="font-heading text-sm font-bold text-white">Investigation Context</h2>
+            <h2 className="font-heading text-sm font-bold text-foreground">Investigation Context</h2>
           </div>
           <InvestigationContextPanel
             investigation={detail.investigation}

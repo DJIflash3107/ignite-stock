@@ -108,7 +108,7 @@ export const InvestigationsPage: React.FC = () => {
       <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-heading text-3xl font-bold text-white">
+            <h1 className="font-heading text-3xl font-bold text-foreground">
               Stock Investigations
             </h1>
             {tickerQuery && (
@@ -132,7 +132,7 @@ export const InvestigationsPage: React.FC = () => {
       {tickerQuery && (
         <div className="flex flex-col gap-4 rounded-[0.25rem] border border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-base font-bold text-white">
+            <p className="text-base font-bold text-foreground">
               Target stock: <span className="font-mono text-accent">{tickerQuery}</span>
             </p>
             <p className="mt-1 text-sm text-secondary-foreground">
@@ -200,7 +200,7 @@ export const InvestigationsPage: React.FC = () => {
 
       {/* Content */}
       {loading ? (
-        <div className="rounded-[0.25rem] border border-border bg-surface-card p-1">
+        <div className="rounded-[0.25rem] border border-border bg-secondary p-1">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -247,7 +247,7 @@ export const InvestigationsPage: React.FC = () => {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-[0.25rem] border border-border bg-surface-card md:block">
+          <div className="hidden overflow-hidden rounded-[0.25rem] border border-border bg-secondary md:block">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -267,7 +267,7 @@ export const InvestigationsPage: React.FC = () => {
                     className="cursor-pointer"
                     onClick={() => navigate(`/investigations/${investigation.id}`)}
                   >
-                    <TableCell className="font-mono font-bold text-white">
+                    <TableCell className="font-mono font-bold text-foreground">
                       {subjectLabel(investigation)}
                     </TableCell>
                     <TableCell className="text-secondary-foreground">
@@ -322,10 +322,10 @@ export const InvestigationsPage: React.FC = () => {
                 key={investigation.id}
                 type="button"
                 onClick={() => navigate(`/investigations/${investigation.id}`)}
-                className="w-full rounded-[0.25rem] border border-border bg-surface-card p-4 text-left transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="w-full rounded-[0.25rem] border border-border bg-secondary p-4 text-left transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="font-mono text-base font-bold text-white">
+                  <span className="font-mono text-base font-bold text-foreground">
                     {subjectLabel(investigation)}
                   </span>
                   <Badge variant={STATUS_VARIANT[investigation.status]}>

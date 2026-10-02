@@ -22,18 +22,18 @@ export interface MarkdownMessageProps {
 
 const components: Components = {
   h1: ({ children }) => (
-    <h3 className="mb-2 mt-4 font-heading text-lg font-bold text-white first:mt-0">{children}</h3>
+    <h3 className="mb-2 mt-4 font-heading text-lg font-bold text-foreground first:mt-0">{children}</h3>
   ),
   h2: ({ children }) => (
-    <h4 className="mb-2 mt-4 font-heading text-base font-bold text-white first:mt-0">{children}</h4>
+    <h4 className="mb-2 mt-4 font-heading text-base font-bold text-foreground first:mt-0">{children}</h4>
   ),
   h3: ({ children }) => (
-    <h5 className="mb-2 mt-4 font-heading text-sm font-bold uppercase tracking-wide text-white first:mt-0">
+    <h5 className="mb-2 mt-4 font-heading text-sm font-bold uppercase tracking-wide text-foreground first:mt-0">
       {children}
     </h5>
   ),
   h4: ({ children }) => (
-    <h6 className="mb-2 mt-3 font-heading text-sm font-bold text-white first:mt-0">{children}</h6>
+    <h6 className="mb-2 mt-3 font-heading text-sm font-bold text-foreground first:mt-0">{children}</h6>
   ),
   h5: ({ children }) => (
     <h6 className="mb-2 mt-3 font-heading text-sm font-bold text-secondary-foreground first:mt-0">
@@ -46,14 +46,14 @@ const components: Components = {
     </h6>
   ),
   p: ({ children }) => <p className="my-2 leading-relaxed first:mt-0 last:mb-0">{children}</p>,
-  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
   em: ({ children }) => <em className="italic">{children}</em>,
   a: ({ children, href }) => (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-accent underline underline-offset-2 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="text-accent underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       {children}
     </a>
@@ -104,7 +104,7 @@ const components: Components = {
   ),
   thead: ({ children }) => <thead className="bg-secondary-light">{children}</thead>,
   th: ({ children }) => (
-    <th className="border-b border-border px-3 py-2 text-left font-heading text-xs font-bold uppercase tracking-wide text-white">
+    <th className="border-b border-border px-3 py-2 text-left font-heading text-xs font-bold uppercase tracking-wide text-foreground">
       {children}
     </th>
   ),

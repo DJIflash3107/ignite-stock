@@ -3,10 +3,13 @@
 /*
  * IgniteStock Design System
  * ---------------------------------------------------------------------------
+ * Theming: colors are driven by CSS variables defined in :root (light) and
+ * .dark (dark). The `.dark` class is toggled on <html> by the theme hook.
+ *
  * Color distribution (60/30/10):
- *   60% base surfaces  -> --color-primary      (#282a36)
- *   30% navigation     -> --color-secondary    (#1f202a)
- *   10% accent / CTA   -> --color-accent       (#ea6947)
+ *   60% base surfaces  -> --color-primary
+ *   30% navigation     -> --color-secondary
+ *   10% accent / CTA   -> --color-accent
  *
  * Neutral black / white / grayscale are used for text, icons and muted states.
  * Additional colors are reserved exclusively for semantic states
@@ -19,43 +22,125 @@
  * Typography: Raleway for headings, the existing body font (Open Sans) for
  * body copy. Only 400 and 700 weights are used.
  */
-@theme {
+
+/* Enable class-based dark mode on <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Light theme (default) ---- */
+:root {
+  --primary: #ffffff;
+  --primary-light: #ffffff;
+  --primary-dark: #f2f2f2;
+  --primary-foreground: #1a1a1a;
+
+  --secondary: #ebebeb;
+  --secondary-light: #f5f5f5;
+  --secondary-dark: #dcdcdc;
+  --secondary-foreground: #2b2b2b;
+
+  --surface: #ebebeb;
+  --surface-card: #ebebeb;
+  --surface-hover: #e0e0e0;
+
+  --border: #a9a9a9;
+  --border-subtle: #d4d4d4;
+
+  --foreground: #1a1a1a;
+  --muted-foreground: #4d4d4d;
+
+  --accent: #ea6947;
+  --accent-hover: #d4593a;
+  --accent-muted: rgba(234, 105, 71, 0.12);
+  --accent-foreground: #ffffff;
+
+  --success: #047857;
+  --success-muted: rgba(4, 120, 87, 0.12);
+  --warning: #b45309;
+  --warning-muted: rgba(180, 83, 9, 0.12);
+  --danger: #dc2626;
+  --danger-muted: rgba(220, 38, 38, 0.1);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.24);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.4);
+  --overlay: rgba(0, 0, 0, 0.45);
+}
+
+/* ---- Dark theme ---- */
+.dark {
+  --primary: #282a36;
+  --primary-light: #2f3140;
+  --primary-dark: #232430;
+  --primary-foreground: #f8f8f2;
+
+  --secondary: #1f202a;
+  --secondary-light: #262734;
+  --secondary-dark: #191a22;
+  --secondary-foreground: #cbd2df;
+
+  --surface: #1f202a;
+  --surface-card: #1f202a;
+  --surface-hover: #282a36;
+
+  --border: #3a3d4d;
+  --border-subtle: #2e303d;
+
+  --foreground: #f8f8f2;
+  --muted-foreground: #a8afbd;
+
+  --accent: #ea6947;
+  --accent-hover: #d4593a;
+  --accent-muted: rgba(234, 105, 71, 0.12);
+  --accent-foreground: #ffffff;
+
+  --success: #34d399;
+  --success-muted: rgba(52, 211, 153, 0.12);
+  --warning: #fbbf24;
+  --warning-muted: rgba(251, 191, 36, 0.12);
+  --danger: #fb7185;
+  --danger-muted: rgba(251, 113, 133, 0.12);
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.24);
+  --overlay: rgba(0, 0, 0, 0.7);
+}
+
+@theme inline {
   /* ---- Surfaces (60 / 30 / 10) ---- */
-  --color-primary: #282a36;
-  --color-primary-light: #2f3140;
-  --color-primary-dark: #232430;
-  --color-primary-foreground: #f8f8f2;
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-foreground: var(--primary-foreground);
 
-  --color-secondary: #1f202a;
-  --color-secondary-light: #262734;
-  --color-secondary-dark: #191a22;
-  --color-secondary-foreground: #cbd2df;
+  --color-secondary: var(--secondary);
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-accent: #ea6947;
-  --color-accent-hover: #d4593a;
-  --color-accent-muted: rgba(234, 105, 71, 0.12);
-  --color-accent-foreground: #ffffff;
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-foreground: var(--accent-foreground);
 
   /* ---- Surface aliases ---- */
-  --color-surface: #282a36;
-  --color-surface-card: #282a36;
-  --color-surface-hover: #323444;
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-surface-hover: var(--surface-hover);
 
   /* ---- Neutral borders (no decorative tints) ---- */
-  --color-border: #3a3d4d;
-  --color-border-subtle: #2e303d;
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
 
   /* ---- Neutral text ---- */
-  --color-foreground: #f8f8f2;
-  --color-muted-foreground: #a8afbd;
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
 
   /* ---- Semantic states (permitted color exceptions) ---- */
-  --color-success: #34d399;
-  --color-success-muted: rgba(52, 211, 153, 0.12);
-  --color-warning: #fbbf24;
-  --color-warning-muted: rgba(251, 191, 36, 0.12);
-  --color-danger: #fb7185;
-  --color-danger-muted: rgba(251, 113, 133, 0.12);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-danger: var(--danger);
+  --color-danger-muted: var(--danger-muted);
 
   /* ---- Typography ---- */
   --font-heading: 'Raleway', ui-sans-serif, system-ui, sans-serif;
@@ -73,7 +158,7 @@
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--border);
   }
 
   html {
@@ -82,8 +167,8 @@
 
   html,
   body {
-    background-color: #1f202a;
-    color: #f8f8f2;
+    background-color: var(--surface);
+    color: var(--foreground);
     font-family: var(--font-body);
     font-size: 16px;
     line-height: 1.5;
@@ -104,7 +189,7 @@
 
   /* Visible focus for every interactive element */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 }
@@ -134,10 +219,10 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--scrollbar-thumb);
   border-radius: 0.25rem;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--scrollbar-thumb-hover);
 }

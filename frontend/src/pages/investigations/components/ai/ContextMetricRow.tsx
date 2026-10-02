@@ -14,7 +14,7 @@ export interface ContextMetricRowProps {
 }
 
 const TONE_CLASS: Record<NonNullable<ContextMetricRowProps['tone']>, string> = {
-  neutral: 'text-white',
+  neutral: 'text-foreground',
   positive: 'text-success',
   negative: 'text-danger',
   muted: 'text-muted-foreground',

@@ -17,7 +17,7 @@ export const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-accent text-white',
+        default: 'border-transparent bg-accent text-accent-foreground',
         secondary: 'border-border bg-secondary-light text-foreground',
         outline: 'border-border text-secondary-foreground',
         supporting: 'border-success/40 bg-success/10 text-success',

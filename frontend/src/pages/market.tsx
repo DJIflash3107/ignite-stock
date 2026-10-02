@@ -23,6 +23,7 @@ import { EmptyState } from '@/components/feedback/EmptyState';
 import { ErrorDisplay } from '@/components/feedback/ErrorDisplay';
 import { Skeleton, SkeletonCard, SkeletonTableRow } from '@/components/feedback/Skeleton';
 import { MarketDateRangePicker } from '@/components/market/MarketDateRangePicker';
+import { MarketCapChart } from '@/components/market/MarketCapChart';
 import { useMarketData } from '@/hooks/useMarketData';
 import { formatDate } from '@/lib/dayjs';
 import {
@@ -160,7 +161,7 @@ export const MarketPage: React.FC = () => {
       <header className="flex flex-col gap-4 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-heading text-3xl font-bold text-white">
+            <h1 className="font-heading text-3xl font-bold text-foreground">
               Market Intelligence
             </h1>
             <Badge variant="supporting">Live IDX</Badge>
@@ -232,7 +233,7 @@ export const MarketPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <BarChart2 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            <h2 className="font-heading text-2xl font-bold text-white">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
               Indonesian Market Summary
             </h2>
           </div>
@@ -338,7 +339,7 @@ export const MarketPage: React.FC = () => {
               <CardContent className="p-5 pt-0 space-y-2">
                 <div className="flex items-center justify-between text-sm text-secondary-foreground">
                   <span>Market return</span>
-                  <span className="font-mono text-white">
+                  <span className="font-mono text-foreground">
                     {formatPercent(impact?.market_return)}
                   </span>
                 </div>
@@ -395,6 +396,22 @@ export const MarketPage: React.FC = () => {
             </Card>
           </div>
         )}
+
+        {/* Daily total IDX market cap trend */}
+        <Card>
+          <CardHeader className="p-5 pb-2">
+            <CardTitle className="text-lg">Total IDX Market Cap — Daily</CardTitle>
+            <CardDescription>
+              Daily total market capitalisation of the IDX universe across the selected window.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 pt-2">
+            <MarketCapChart
+              series={overview?.market_cap_series ?? []}
+              loading={overviewLoading}
+            />
+          </CardContent>
+        </Card>
       </section>
 
       {/* SECTION 2: Sector & index performance */}
@@ -402,7 +419,7 @@ export const MarketPage: React.FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            <h2 className="font-heading text-2xl font-bold text-white">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
               Sector &amp; Index Performance
             </h2>
             {overview?.index_series && (
@@ -428,8 +445,8 @@ export const MarketPage: React.FC = () => {
                 aria-pressed={indexTab === tab.value}
                 className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                   indexTab === tab.value
-                    ? 'bg-surface-hover text-white'
-                    : 'text-muted-foreground hover:text-white'
+                    ? 'bg-surface-hover text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {tab.label}
@@ -470,11 +487,11 @@ export const MarketPage: React.FC = () => {
             {filteredIndexSeries.map((item) => (
               <div
                 key={item.index_code}
-                className="flex flex-col justify-between rounded-[0.25rem] border border-border bg-surface-card p-4 transition-colors hover:border-accent"
+                className="flex flex-col justify-between rounded-[0.25rem] border border-border bg-secondary p-4 transition-colors hover:border-accent"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-heading text-sm font-bold text-white">
+                    <span className="font-heading text-sm font-bold text-foreground">
                       {item.index_code}
                     </span>
                     <Badge variant="secondary" className="font-mono">
@@ -483,7 +500,8 @@ export const MarketPage: React.FC = () => {
                         : 'Index'}
                     </Badge>
                   </div>
-                  <div className="mt-2 font-mono text-base font-bold text-white">
+                  <div className="mt-2 font-mono text-base font-bold text-foreground">
+                    IDR{' '}
                     {item.price.toLocaleString('id-ID', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -504,7 +522,7 @@ export const MarketPage: React.FC = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-            <h2 className="font-heading text-2xl font-bold text-white">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
               Market Movers
             </h2>
             <span className="hidden text-sm text-muted-foreground sm:inline">
@@ -523,8 +541,8 @@ export const MarketPage: React.FC = () => {
                 aria-pressed={period === opt.value}
                 className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 ${
                   period === opt.value
-                    ? 'bg-surface-hover text-white'
-                    : 'text-muted-foreground hover:text-white'
+                    ? 'bg-surface-hover text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {opt.label}
@@ -594,13 +612,13 @@ export const MarketPage: React.FC = () => {
                           key={stock.ticker}
                           className="transition-colors hover:bg-surface-hover"
                         >
-                          <td className="py-3 pl-4 pr-2 font-bold text-white">
+                          <td className="py-3 pl-4 pr-2 font-bold text-foreground">
                             {stock.ticker}
                           </td>
                           <td className="max-w-[130px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[180px]">
                             {stock.company_name}
                           </td>
-                          <td className="px-2 py-3 text-right text-white">
+                          <td className="px-2 py-3 text-right text-foreground">
                             {formatCurrency(stock.last_close_price)}
                           </td>
                           <td className="px-2 py-3 text-right font-bold text-success">
@@ -678,13 +696,13 @@ export const MarketPage: React.FC = () => {
                           key={stock.ticker}
                           className="transition-colors hover:bg-surface-hover"
                         >
-                          <td className="py-3 pl-4 pr-2 font-bold text-white">
+                          <td className="py-3 pl-4 pr-2 font-bold text-foreground">
                             {stock.ticker}
                           </td>
                           <td className="max-w-[130px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[180px]">
                             {stock.company_name}
                           </td>
-                          <td className="px-2 py-3 text-right text-white">
+                          <td className="px-2 py-3 text-right text-foreground">
                             {formatCurrency(stock.last_close_price)}
                           </td>
                           <td className="px-2 py-3 text-right font-bold text-danger">
@@ -718,7 +736,7 @@ export const MarketPage: React.FC = () => {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-              <h2 className="font-heading text-2xl font-bold text-white">
+              <h2 className="font-heading text-2xl font-bold text-foreground">
                 Estimated Market Contributors
               </h2>
               {impact?.index_code && (
@@ -789,7 +807,7 @@ export const MarketPage: React.FC = () => {
                       <td className="py-3 pl-4 pr-2 font-sans text-muted-foreground">
                         #{idx + 1}
                       </td>
-                      <td className="px-2 py-3 font-bold text-white">
+                      <td className="px-2 py-3 font-bold text-foreground">
                         {c.ticker}
                       </td>
                       <td className="max-w-[150px] truncate px-2 font-sans text-secondary-foreground sm:max-w-[220px]">
@@ -802,7 +820,7 @@ export const MarketPage: React.FC = () => {
                       >
                         {formatPercent(c.price_change)}
                       </td>
-                      <td className="px-2 py-3 text-right text-white">
+                      <td className="px-2 py-3 text-right text-foreground">
                         {formatMarketCap(c.market_cap)}
                       </td>
                       <td className="px-2 py-3 text-right text-secondary-foreground">
@@ -839,13 +857,13 @@ export const MarketPage: React.FC = () => {
 
       {/* SECTION 6: Quick stock investigation */}
       <section>
-        <div className="rounded-[0.25rem] border border-border bg-surface-card p-6">
+        <div className="rounded-[0.25rem] border border-border bg-secondary p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-accent-foreground">
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="font-heading text-xl font-bold text-white">
+              <h2 className="font-heading text-xl font-bold text-foreground">
                 Quick Stock Investigation
               </h2>
               <p className="text-sm text-muted-foreground">

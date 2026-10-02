@@ -12,10 +12,13 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { GuestRoute } from './components/auth/GuestRoute';
 import { AppShell } from './components/layout/AppShell';
 import { useAuthInit } from './hooks/useAuthInit';
+import { useThemeInit } from './hooks/useThemeInit';
 
 function AppRoutes() {
   // Initialize auth state and listen for session expiry / 401 events
   useAuthInit();
+  // Keep the document theme in sync with Redux + system preference
+  useThemeInit();
 
   return (
     <Routes>

@@ -102,12 +102,12 @@ export const PeersSection: React.FC<PeersSectionProps> = ({
                 const isNegative = ret !== null && ret < 0;
                 return (
                   <TableRow key={peer.symbol}>
-                    <TableCell className="font-mono font-bold text-white">
+                    <TableCell className="font-mono font-bold text-foreground">
                       {peer.symbol}
                     </TableCell>
                     <TableCell
                       className={`text-right font-mono font-bold ${
-                        isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-white'
+                        isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-foreground'
                       }`}
                     >
                       {formatPercent(ret)}

@@ -24,7 +24,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       <div
         className={cn(
           'flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.25rem]',
-          isUser ? 'bg-secondary-light text-secondary-foreground' : 'bg-accent text-white'
+          isUser ? 'bg-secondary-light text-secondary-foreground' : 'bg-accent text-accent-foreground'
         )}
         aria-hidden="true"
       >

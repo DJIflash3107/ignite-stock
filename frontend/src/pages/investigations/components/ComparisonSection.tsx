@@ -37,9 +37,9 @@ function MetricRow({ label, value, emphasis = false }: MetricRowProps) {
         className={
           emphasis
             ? `font-mono text-base font-bold ${
-                isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-white'
+                isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-foreground'
               }`
-            : `font-mono text-sm ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-white'}`
+            : `font-mono text-sm ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-foreground'}`
         }
       >
         {formatPercent(value)}

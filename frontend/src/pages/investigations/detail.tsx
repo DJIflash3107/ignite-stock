@@ -68,20 +68,20 @@ export const InvestigationDetailPage: React.FC = () => {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link
           to="/investigations"
-          className="flex items-center gap-1 rounded-[0.25rem] hover:text-white transition-colors"
+          className="flex items-center gap-1 rounded-[0.25rem] hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           <span>Back to Investigations</span>
         </Link>
         <span aria-hidden="true">/</span>
-        <span className="font-mono text-white">{id}</span>
+        <span className="font-mono text-foreground">{id}</span>
       </div>
 
       {/* Header */}
       <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-heading text-3xl font-bold text-white">
+            <h1 className="font-heading text-3xl font-bold text-foreground">
               Investigation Report
             </h1>
             <Badge variant="outline" className="font-mono">

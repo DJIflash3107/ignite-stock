@@ -18,15 +18,15 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-accent text-white hover:bg-accent-hover',
+        default: 'bg-accent text-accent-foreground hover:bg-accent-hover',
         secondary:
           'bg-secondary-light text-foreground border border-border hover:bg-surface-hover',
         outline:
           'border border-border bg-transparent text-foreground hover:bg-surface-hover',
         ghost:
-          'text-secondary-foreground hover:bg-surface-hover hover:text-white',
+          'text-secondary-foreground hover:bg-surface-hover hover:text-foreground',
         destructive:
-          'border border-danger/50 text-danger hover:bg-danger/10 hover:text-white',
+          'border border-danger/50 text-danger hover:bg-danger/10 hover:text-foreground',
         link: 'text-accent underline-offset-4 hover:underline p-0 h-auto font-normal',
       },
       size: {

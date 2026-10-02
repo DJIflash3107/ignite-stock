@@ -7,13 +7,14 @@ import {
   LogOut,
   Menu,
   X,
-  Sparkles,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { logoutUser } from '@/redux/thunks/authThunks';
 import { GlobalSearch } from './GlobalSearch';
+import Logo from '/logo_ignitestock.png';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -68,7 +69,7 @@ export const AppShell: React.FC = () => {
       {/* Mobile navigation overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/70 lg:hidden"
+          className="fixed inset-0 z-40 bg-[var(--overlay)] lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-hidden="true"
         />
@@ -92,15 +93,13 @@ export const AppShell: React.FC = () => {
           {(!isSidebarCollapsed || isMobileMenuOpen) && (
             <NavLink
               to="/market"
-              className="flex items-center gap-3 overflow-hidden rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex items-center gap-2 overflow-hidden rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[0.25rem] bg-accent text-white">
-                <Sparkles className="h-5 w-5" aria-hidden="true" />
-              </div>
+              <img src={Logo} alt="IgniteStock logo" className="h-10" />
               <div className="flex flex-col">
-                <span className="font-heading text-lg font-bold text-white whitespace-nowrap">
-                  Ignite<span className="text-accent">Stock</span>
+                <span className="font-heading text-lg font-bold text-foreground whitespace-nowrap">
+                  IgniteStock
                 </span>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   IDX Intelligence
@@ -113,7 +112,7 @@ export const AppShell: React.FC = () => {
             {/* Desktop sidebar collapse toggle — top-right of the sidebar brand row */}
             <button
               type="button"
-              className="hidden lg:inline-flex rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="hidden lg:inline-flex rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               onClick={() => setIsSidebarCollapsed((prev) => !prev)}
               title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -125,7 +124,7 @@ export const AppShell: React.FC = () => {
             {/* Mobile close */}
             <button
               type="button"
-              className="rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              className="rounded-[0.25rem] p-2 text-secondary-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
               aria-label="Close navigation"
             >
@@ -150,8 +149,8 @@ export const AppShell: React.FC = () => {
                 className={cn(
                   `flex items-center ${!isSidebarCollapsed ? 'gap-3' : 'justify-center'} rounded-[0.25rem] px-3 py-3 text-sm font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`,
                   active
-                    ? 'bg-accent text-white'
-                    : 'text-secondary-foreground hover:bg-surface-hover hover:text-white'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-secondary-foreground hover:bg-surface-hover hover:text-foreground'
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -169,7 +168,7 @@ export const AppShell: React.FC = () => {
             <div className="flex items-center gap-3 rounded-[0.25rem] bg-primary p-3">
               <Avatar name={user?.name} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-white truncate">{user?.name || 'User'}</p>
+                <p className="text-sm font-bold text-foreground truncate">{user?.name || 'User'}</p>
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
               <Badge variant="secondary">
@@ -191,7 +190,7 @@ export const AppShell: React.FC = () => {
           <div className="flex items-center gap-3 flex-1 max-w-2xl">
             <button
               type="button"
-              className="rounded-[0.25rem] p-2.5 text-secondary-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+              className="rounded-[0.25rem] p-2.5 text-secondary-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open navigation menu"
             >
@@ -208,6 +207,8 @@ export const AppShell: React.FC = () => {
               <span>IDX Engine Live</span>
             </div>
 
+            <ThemeToggle />
+
             <DropdownMenu>
               <DropdownMenuTrigger
                 className="rounded-[0.25rem] focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-secondary"
@@ -217,7 +218,7 @@ export const AppShell: React.FC = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="right" className="w-64">
                 <DropdownMenuLabel>
-                  <p className="font-bold text-white truncate">{user?.name || 'Account'}</p>
+                  <p className="font-bold text-foreground truncate">{user?.name || 'Account'}</p>
                   <p className="text-xs font-normal text-muted-foreground truncate">
                     {user?.email}
                   </p>

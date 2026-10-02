@@ -23,6 +23,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import Logo from '/logo_ignitestock.png';
 
 /**
  * Marketing landing page.
@@ -88,13 +90,11 @@ export const LandingPage: React.FC = () => {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             to="/"
-            className="flex items-center gap-3 rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex gap-2 items-center rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-[0.25rem] bg-accent text-white">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <span className="font-heading text-xl font-bold text-white">
-              Ignite<span className="text-accent">Stock</span>
+            <img src={Logo} alt="Logo" className="h-10" />
+            <span className="font-heading text-xl font-bold text-foreground">
+              IgniteStock
             </span>
           </Link>
 
@@ -109,7 +109,7 @@ export const LandingPage: React.FC = () => {
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-[0.25rem] text-sm font-bold text-secondary-foreground transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="rounded-[0.25rem] text-sm font-bold text-secondary-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 {link.label}
               </a>
@@ -117,6 +117,7 @@ export const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {isAuthenticated ? (
               <Link to="/market">
                 <Button variant="default" size="sm">
@@ -152,7 +153,7 @@ export const LandingPage: React.FC = () => {
               <span>Evidence-First Equity Investigation Platform</span>
             </div>
 
-            <h1 className="mt-6 font-heading text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
+            <h1 className="mt-6 font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl lg:text-5xl">
               Investigate what moved.{' '}
               <span className="text-accent">Understand why.</span>{' '}
               Follow the evidence.
@@ -217,7 +218,7 @@ export const LandingPage: React.FC = () => {
                     <span className="font-bold text-accent">Active query</span>
                     <span className="font-mono text-xs text-secondary-foreground">IDX: BBRI</span>
                   </div>
-                  <p className="text-base font-bold text-white">
+                  <p className="text-base font-bold text-foreground">
                     &ldquo;Why did BBRI surge +4.8% while the banking index moved only +0.9%?&rdquo;
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -227,7 +228,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div className="rounded-[0.25rem] border border-border bg-secondary p-4">
-                  <h4 className="mb-3 flex items-center gap-2 font-heading text-sm font-bold text-white">
+                  <h4 className="mb-3 flex items-center gap-2 font-heading text-sm font-bold text-foreground">
                     <GitBranch className="h-4 w-4 text-accent" aria-hidden="true" />
                     Autonomous Investigation Nodes
                   </h4>
@@ -239,7 +240,7 @@ export const LandingPage: React.FC = () => {
                     ].map((node) => (
                       <div
                         key={node.n}
-                        className="flex items-center justify-between rounded-[0.25rem] border border-border bg-primary p-2.5 text-white"
+                        className="flex items-center justify-between rounded-[0.25rem] border border-border bg-primary p-2.5 text-foreground"
                       >
                         <span className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
@@ -250,7 +251,7 @@ export const LandingPage: React.FC = () => {
                         </span>
                       </div>
                     ))}
-                    <div className="flex items-center justify-between rounded-[0.25rem] border border-accent bg-accent/10 p-2.5 text-white">
+                    <div className="flex items-center justify-between rounded-[0.25rem] border border-accent bg-accent/10 p-2.5 text-foreground">
                       <span className="flex items-center gap-2">
                         <Cpu className="h-4 w-4 text-accent" aria-hidden="true" />
                         4. process_evidence
@@ -273,7 +274,7 @@ export const LandingPage: React.FC = () => {
                 <div className="rounded-[0.25rem] border border-border bg-secondary p-4">
                   <div className="mb-4 flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <span className="font-heading text-base font-bold text-white">
+                      <span className="font-heading text-base font-bold text-foreground">
                         Correlated Evidence Matrix
                       </span>
                       <p className="text-sm text-secondary-foreground">
@@ -303,7 +304,7 @@ export const LandingPage: React.FC = () => {
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex items-start gap-2">
                               <Icon className={`h-4 w-4 shrink-0 mt-0.5 ${tone.text}`} aria-hidden="true" />
-                              <span className="text-sm font-bold text-white">{item.title}</span>
+                              <span className="text-sm font-bold text-foreground">{item.title}</span>
                             </div>
                             <Badge variant={item.kind}>{item.badge}</Badge>
                           </div>
@@ -332,7 +333,7 @@ export const LandingPage: React.FC = () => {
             <span className="text-sm font-bold text-accent">
               The Reality of IDX Market Intelligence
             </span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-foreground sm:text-4xl">
               Why Traditional Stock Analysis Fails on the IDX
             </h2>
             <p className="mt-4 text-base text-secondary-foreground leading-relaxed">
@@ -369,7 +370,7 @@ export const LandingPage: React.FC = () => {
             ].map((problem) => {
               const Icon = problem.icon;
               return (
-                <Card key={problem.title} className="border-border bg-surface-card">
+                <Card key={problem.title} className="border-border bg-secondary">
                   <CardHeader>
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-[0.25rem] border border-border bg-secondary text-danger">
                       <Icon className="h-6 w-6" aria-hidden="true" />
@@ -395,7 +396,7 @@ export const LandingPage: React.FC = () => {
               <div className="inline-flex items-center rounded-[0.25rem] bg-accent/10 px-3 py-1 text-sm font-bold text-accent">
                 The IgniteStock Solution
               </div>
-              <h2 className="font-heading text-3xl font-bold leading-tight text-white sm:text-4xl">
+              <h2 className="font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl">
                 Deterministic Accuracy Grounded in Real Market Evidence
               </h2>
               <p className="text-base text-secondary-foreground leading-relaxed">
@@ -427,7 +428,7 @@ export const LandingPage: React.FC = () => {
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </div>
                       <div>
-                        <h4 className="font-heading text-base font-bold text-white">{point.title}</h4>
+                        <h4 className="font-heading text-base font-bold text-foreground">{point.title}</h4>
                         <p className="mt-1 text-sm text-secondary-foreground leading-relaxed">
                           {point.body}
                         </p>
@@ -440,9 +441,9 @@ export const LandingPage: React.FC = () => {
 
             {/* Architecture */}
             <div className="lg:col-span-6">
-              <div className="rounded-[0.25rem] border border-border bg-surface-card p-6">
+              <div className="rounded-[0.25rem] border border-border bg-secondary p-6">
                 <div className="mb-4 flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
-                  <h3 className="flex items-center gap-2 font-heading text-base font-bold text-white">
+                  <h3 className="flex items-center gap-2 font-heading text-base font-bold text-foreground">
                     <Cpu className="h-4 w-4 text-accent" aria-hidden="true" />
                     IgniteStock System Architecture
                   </h3>
@@ -474,7 +475,7 @@ export const LandingPage: React.FC = () => {
                   ].map((layer) => (
                     <div key={layer.label} className="rounded-[0.25rem] border border-border bg-secondary p-3">
                       <span className={`block text-xs font-bold ${layer.tone}`}>{layer.label}</span>
-                      <span className="font-bold text-white">{layer.value}</span>
+                      <span className="font-bold text-foreground">{layer.value}</span>
                       <p className="mt-1 text-xs text-secondary-foreground">{layer.note}</p>
                     </div>
                   ))}
@@ -490,7 +491,7 @@ export const LandingPage: React.FC = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <span className="text-sm font-bold text-accent">Platform Capabilities</span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-foreground sm:text-4xl">
               Built Specifically for the Complexity of the IDX
             </h2>
             <p className="mt-4 text-base text-secondary-foreground leading-relaxed">
@@ -539,7 +540,7 @@ export const LandingPage: React.FC = () => {
             ].map((feature) => {
               const Icon = feature.icon;
               return (
-                <Card key={feature.title} className="border-border bg-surface-card">
+                <Card key={feature.title} className="border-border bg-secondary">
                   <CardHeader>
                     <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-[0.25rem] border border-border bg-secondary text-accent">
                       <Icon className="h-5 w-5" aria-hidden="true" />
@@ -567,7 +568,7 @@ export const LandingPage: React.FC = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <span className="text-sm font-bold text-accent">The Workflow</span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-foreground sm:text-4xl">
               How an Investigation Unfolds
             </h2>
             <p className="mt-4 text-base text-secondary-foreground leading-relaxed">
@@ -604,13 +605,13 @@ export const LandingPage: React.FC = () => {
             ].map((step) => (
               <div
                 key={step.n}
-                className="flex flex-col justify-between rounded-[0.25rem] border border-border bg-surface-card p-6"
+                className="flex flex-col justify-between rounded-[0.25rem] border border-border bg-secondary p-6"
               >
                 <div>
-                  <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-[0.25rem] bg-accent font-heading text-sm font-bold text-white">
+                  <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-[0.25rem] bg-accent font-heading text-sm font-bold text-accent-foreground">
                     {step.n}
                   </div>
-                  <h3 className="mb-2 font-heading text-xl font-bold text-white">{step.title}</h3>
+                  <h3 className="mb-2 font-heading text-xl font-bold text-foreground">{step.title}</h3>
                   <p className="text-sm text-secondary-foreground leading-relaxed">{step.body}</p>
                 </div>
                 <div className="mt-4 border-t border-border pt-3 font-mono text-xs text-accent">
@@ -627,7 +628,7 @@ export const LandingPage: React.FC = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <span className="text-sm font-bold text-accent">The Evidence-First Methodology</span>
-            <h2 className="mt-3 font-heading text-3xl font-bold text-white sm:text-4xl">
+            <h2 className="mt-3 font-heading text-3xl font-bold text-foreground sm:text-4xl">
               Tri-State Evidence: Why Dissenting Data Matters
             </h2>
             <p className="mt-4 text-base text-secondary-foreground leading-relaxed">
@@ -635,10 +636,10 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="mt-12 rounded-[0.25rem] border border-border bg-surface-card p-6">
+          <div className="mt-12 rounded-[0.25rem] border border-border bg-secondary p-6">
             <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="flex items-center gap-2 font-heading text-xl font-bold text-white">
+                <h3 className="flex items-center gap-2 font-heading text-xl font-bold text-foreground">
                   <FileCheck className="h-5 w-5 text-accent" aria-hidden="true" />
                   Sample Investigation: ASII (Astra International)
                 </h3>
@@ -661,11 +662,10 @@ export const LandingPage: React.FC = () => {
                     type="button"
                     onClick={() => setActiveTab(tab.value)}
                     aria-pressed={activeTab === tab.value}
-                    className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                      activeTab === tab.value
-                        ? 'bg-surface-hover text-white'
-                        : 'text-muted-foreground hover:text-white'
-                    }`}
+                    className={`rounded-[0.25rem] px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeTab === tab.value
+                      ? 'bg-surface-hover text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -687,7 +687,7 @@ export const LandingPage: React.FC = () => {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-start gap-2">
                         <Icon className={`h-4 w-4 shrink-0 mt-0.5 ${tone.text}`} aria-hidden="true" />
-                        <span className="text-sm font-bold text-white">{item.title}</span>
+                        <span className="text-sm font-bold text-foreground">{item.title}</span>
                       </div>
                       <Badge variant={item.kind}>{item.badge}</Badge>
                     </div>
@@ -714,7 +714,7 @@ export const LandingPage: React.FC = () => {
             <span>Ready for Rigorous Equity Intelligence</span>
           </div>
 
-          <h2 className="mt-6 font-heading text-3xl font-bold leading-tight text-white sm:text-4xl">
+          <h2 className="mt-6 font-heading text-3xl font-bold leading-tight text-foreground sm:text-4xl">
             Stop Guessing IDX Movements.{' '}
             <span className="text-accent">Follow the Evidence.</span>
           </h2>
@@ -748,13 +748,11 @@ export const LandingPage: React.FC = () => {
       <footer className="bg-secondary-dark py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[0.25rem] bg-accent text-white">
-                <Sparkles className="h-5 w-5" aria-hidden="true" />
-              </div>
+            <div className="flex items-center gap-2">
+              <img src={Logo} alt="IgniteStock logo" className="h-10 mb-auto" />
               <div>
-                <span className="font-heading text-lg font-bold text-white">
-                  Ignite<span className="text-accent">Stock</span>
+                <span className="font-heading text-lg font-bold text-foreground">
+                  IgniteStock
                 </span>
                 <p className="text-sm text-muted-foreground">
                   Evidence-driven equity investigation for the Indonesian Stock Exchange.

@@ -140,8 +140,8 @@ export const DropdownMenuItem = React.forwardRef<
       className={cn(
         'relative flex cursor-pointer select-none items-center gap-2 rounded-[0.25rem] px-3 py-2.5 text-sm font-bold outline-none transition-colors duration-150',
         destructive
-          ? 'text-danger hover:bg-danger/10 hover:text-white'
-          : 'text-secondary-foreground hover:bg-surface-hover hover:text-white',
+          ? 'text-danger hover:bg-danger/10 hover:text-foreground'
+          : 'text-secondary-foreground hover:bg-surface-hover hover:text-foreground',
         disabled && 'pointer-events-none opacity-50',
         className
       )}
@@ -186,7 +186,7 @@ export const DropdownMenuLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('px-3 py-2 text-sm font-bold text-white', className)}
+    className={cn('px-3 py-2 text-sm font-bold text-foreground', className)}
     {...props}
   />
 ));

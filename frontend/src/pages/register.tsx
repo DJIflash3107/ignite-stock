@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useFormWithSchema } from '@/hooks/useFormWithSchema';
 import { registerSchema, type RegisterFormData } from '@/schema/auth';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FormError } from '@/components/feedback/FormError';
 import { ErrorDisplay } from '@/components/feedback/ErrorDisplay';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import Logo from '/logo_ignitestock.png';
 
 /**
  * Register page.
@@ -59,22 +61,23 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+    <div className="relative min-h-screen bg-secondary flex flex-col items-center justify-center px-4 py-12">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         {/* Brand */}
         <Link
           to="/"
-          className="mb-8 flex items-center gap-3 rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="mb-8 flex gap-2 rounded-[0.25rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-[0.25rem] bg-accent text-white">
-            <Sparkles className="h-6 w-6" aria-hidden="true" />
-          </div>
-          <span className="font-heading text-2xl font-bold text-white">
-            Ignite<span className="text-accent">Stock</span>
+          <img src={Logo} alt="IgniteStock logo" className="h-10" />
+          <span className="font-heading text-2xl font-bold text-foreground mt-auto">
+            IgniteStock
           </span>
         </Link>
 
-        <h1 className="font-heading text-3xl font-bold text-white">Create your account</h1>
+        <h1 className="font-heading text-3xl font-bold text-foreground">Create your account</h1>
         <p className="mt-2 text-base text-secondary-foreground">
           Analyze market anomalies, investigate stock movements, and consult the AI agent.
         </p>
@@ -162,7 +165,7 @@ export const RegisterPage: React.FC = () => {
         <div className="mt-8 border-t border-border pt-6">
           <Link
             to="/"
-            className="text-sm text-muted-foreground hover:text-white transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Back to homepage
           </Link>

@@ -189,7 +189,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
           {showClose && (
             <DialogClose
               aria-label="Close dialog"
-              className="absolute right-4 top-4 h-10 w-10 text-muted-foreground hover:bg-surface-hover hover:text-white"
+              className="absolute right-4 top-4 h-10 w-10 text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </DialogClose>
@@ -228,7 +228,7 @@ export const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn('font-heading text-2xl font-bold text-white', className)}
+    className={cn('font-heading text-2xl font-bold text-foreground', className)}
     {...props}
   />
 ));

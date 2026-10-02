@@ -55,7 +55,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className, onSearchC
           <button
             type="button"
             onClick={handleClear}
-            className="mr-1.5 rounded-[0.25rem] p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="mr-1.5 rounded-[0.25rem] p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
@@ -68,7 +68,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className, onSearchC
           className={cn(
             'flex h-8 items-center rounded-[0.25rem] px-3 text-sm font-bold transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             query.trim()
-              ? 'bg-accent text-white hover:bg-accent-hover cursor-pointer'
+              ? 'bg-accent text-accent-foreground hover:bg-accent-hover cursor-pointer'
               : 'bg-secondary-light text-muted-foreground cursor-not-allowed'
           )}
           aria-label="Submit ticker lookup"

@@ -142,7 +142,7 @@ export const InvestigationContextPanel: React.FC<InvestigationContextPanelProps>
         </CardHeader>
         <CardContent className="space-y-3 pt-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-heading text-xl font-bold text-white">
+            <span className="font-heading text-xl font-bold text-foreground">
               {investigation.company_ticker ?? '—'}
             </span>
             <Badge variant={STATUS_VARIANT[investigation.status]}>
@@ -298,14 +298,14 @@ export const InvestigationContextPanel: React.FC<InvestigationContextPanelProps>
                 .map((driver) => (
                   <li key={driver.id} className="rounded-[0.25rem] border border-border bg-primary p-3">
                     <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-[0.25rem] bg-surface-hover font-mono text-xs font-bold text-white">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-[0.25rem] bg-surface-hover font-mono text-xs font-bold text-foreground">
                         {driver.rank}
                       </span>
                       <Badge variant={CONFIDENCE_VARIANT[driver.confidence]}>
                         {CONFIDENCE_LABEL[driver.confidence]}
                       </Badge>
                     </div>
-                    <p className="mt-2 text-sm font-bold text-white">{driver.title}</p>
+                    <p className="mt-2 text-sm font-bold text-foreground">{driver.title}</p>
                   </li>
                 ))}
             </ol>
@@ -334,7 +334,7 @@ export const InvestigationContextPanel: React.FC<InvestigationContextPanelProps>
             />
           ) : (
             <div>
-              <p className="font-mono text-2xl font-bold text-white">{evidenceCount}</p>
+              <p className="font-mono text-2xl font-bold text-foreground">{evidenceCount}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 factual item{evidenceCount === 1 ? '' : 's'} recorded
               </p>

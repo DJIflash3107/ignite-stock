@@ -5,7 +5,7 @@
 
 export function formatCurrency(val: number | null | undefined): string {
   if (val === null || val === undefined || isNaN(val)) return '—';
-  return `Rp ${Math.round(val).toLocaleString('id-ID')}`;
+  return `IDR ${Math.round(val).toLocaleString('id-ID')}`;
 }
 
 export function formatMarketCap(val: number | null | undefined): string {
@@ -14,17 +14,17 @@ export function formatMarketCap(val: number | null | undefined): string {
 
   if (absVal >= 1_000_000_000_000) {
     const trillions = val / 1_000_000_000_000;
-    return `Rp ${trillions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T`;
+    return `IDR ${trillions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T`;
   }
   if (absVal >= 1_000_000_000) {
     const billions = val / 1_000_000_000;
-    return `Rp ${billions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} B`;
+    return `IDR ${billions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} B`;
   }
   if (absVal >= 1_000_000) {
     const millions = val / 1_000_000;
-    return `Rp ${millions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
+    return `IDR ${millions.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
   }
-  return `Rp ${val.toLocaleString('id-ID')}`;
+  return `IDR ${val.toLocaleString('id-ID')}`;
 }
 
 export function formatPercent(

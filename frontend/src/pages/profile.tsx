@@ -84,7 +84,7 @@ export const ProfilePage: React.FC = () => {
     <div className="max-w-3xl space-y-10">
       {/* Header */}
       <header className="border-b border-border pb-6">
-        <h1 className="font-heading text-3xl font-bold text-white">Account Profile</h1>
+        <h1 className="font-heading text-3xl font-bold text-foreground">Account Profile</h1>
         <p className="mt-2 text-base text-secondary-foreground">
           Manage your credentials, role permissions, and session status.
         </p>
@@ -96,7 +96,7 @@ export const ProfilePage: React.FC = () => {
           <Avatar name={user?.name} size="xl" />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-heading text-2xl font-bold text-white">
+              <h2 className="font-heading text-2xl font-bold text-foreground">
                 {user?.name || '—'}
               </h2>
               <Badge variant="secondary">{user?.role || 'user'}</Badge>
@@ -113,7 +113,7 @@ export const ProfilePage: React.FC = () => {
 
       {/* Details */}
       <section>
-        <h3 className="font-heading text-xl font-bold text-white">Account details</h3>
+        <h3 className="font-heading text-xl font-bold text-foreground">Account details</h3>
         <dl className="mt-4 divide-y divide-border border-y border-border">
           {details.map((item) => {
             const Icon = item.icon;
@@ -132,7 +132,7 @@ export const ProfilePage: React.FC = () => {
                   <span>{item.label}</span>
                 </dt>
                 <dd
-                  className={`text-sm font-bold text-white sm:text-right ${
+                  className={`text-sm font-bold text-foreground sm:text-right ${
                     item.mono ? 'font-mono break-all' : ''
                   }`}
                 >
@@ -212,7 +212,7 @@ const ProfileDetailsForm: React.FC<ProfileDetailsFormProps> = ({
     <section aria-labelledby="profile-details-heading">
       <div className="flex items-center gap-2">
         <UserIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-        <h3 id="profile-details-heading" className="font-heading text-xl font-bold text-white">
+        <h3 id="profile-details-heading" className="font-heading text-xl font-bold text-foreground">
           Profile details
         </h3>
       </div>
@@ -314,7 +314,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ userId }) => {
     <section aria-labelledby="change-password-heading">
       <div className="flex items-center gap-2">
         <KeyRound className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-        <h3 id="change-password-heading" className="font-heading text-xl font-bold text-white">
+        <h3 id="change-password-heading" className="font-heading text-xl font-bold text-foreground">
           Change password
         </h3>
       </div>

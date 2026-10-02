@@ -30,7 +30,7 @@ export const AskAboutSection: React.FC<AskAboutSectionProps> = ({
   return (
     <div className="flex flex-col gap-4 rounded-[0.25rem] border border-accent/40 bg-accent/5 p-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h3 className="font-heading text-xl font-bold text-white">
+        <h3 className="font-heading text-xl font-bold text-foreground">
           Ask about this investigation
         </h3>
         <p className="mt-1 text-sm text-secondary-foreground leading-relaxed">

@@ -40,7 +40,7 @@ export const AgentStatusTrail: React.FC<AgentStatusTrailProps> = ({ steps }) => 
       </div>
 
       <div className="w-full max-w-[80%] rounded-[0.25rem] border border-border bg-primary p-4">
-        <p className="font-heading text-sm font-bold text-white">Agent working…</p>
+        <p className="font-heading text-sm font-bold text-foreground">Agent working…</p>
         <ol className="mt-3 space-y-2">
           {steps.map((step) => (
             <li key={step.id} className="flex items-start gap-2 text-sm">

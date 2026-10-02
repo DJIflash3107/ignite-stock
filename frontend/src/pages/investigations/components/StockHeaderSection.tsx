@@ -68,7 +68,7 @@ export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
       <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="font-heading text-2xl font-bold text-white">
+            <h2 className="font-heading text-2xl font-bold text-foreground">
               {investigation?.company_ticker ?? '—'}
             </h2>
             {investigation?.status && (
@@ -97,7 +97,7 @@ export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
               <span
                 className={
                   stockReturn === null || stockReturn === 0
-                    ? 'font-mono text-2xl font-bold text-white'
+                    ? 'font-mono text-2xl font-bold text-foreground'
                     : stockReturn > 0
                       ? 'font-mono text-2xl font-bold text-success'
                       : 'font-mono text-2xl font-bold text-danger'
@@ -117,13 +117,13 @@ export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <dt className="text-sm text-muted-foreground">Close price</dt>
-            <dd className="mt-1 font-mono text-lg font-bold text-white">
+            <dd className="mt-1 font-mono text-lg font-bold text-foreground">
               {loading ? <Skeleton className="h-6 w-24" /> : formatCurrency(closePrice)}
             </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">Volume vs 20d avg</dt>
-            <dd className="mt-1 font-mono text-lg font-bold text-white">
+            <dd className="mt-1 font-mono text-lg font-bold text-foreground">
               {loading ? (
                 <Skeleton className="h-6 w-20" />
               ) : volumeRatio !== null ? (
@@ -135,13 +135,13 @@ export const StockHeaderSection: React.FC<StockHeaderSectionProps> = ({
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">Trade date</dt>
-            <dd className="mt-1 font-mono text-lg font-bold text-white">
+            <dd className="mt-1 font-mono text-lg font-bold text-foreground">
               {loading ? <Skeleton className="h-6 w-28" /> : formatDate(tradeDate)}
             </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">Overall confidence</dt>
-            <dd className="mt-1 text-lg font-bold text-white">
+            <dd className="mt-1 text-lg font-bold text-foreground">
               {loading ? (
                 <Skeleton className="h-6 w-24" />
               ) : investigation?.overall_confidence ? (

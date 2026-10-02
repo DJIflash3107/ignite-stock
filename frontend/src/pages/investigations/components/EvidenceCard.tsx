@@ -40,7 +40,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ item }) => {
   const hasRawData = item.data && Object.keys(item.data).length > 0;
 
   return (
-    <article className="rounded-[0.25rem] border border-border bg-surface-card p-5">
+    <article className="rounded-[0.25rem] border border-border bg-secondary p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -64,7 +64,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ item }) => {
               {alignmentLabel(item.alignment)}
             </Badge>
           </div>
-          <h4 className="mt-3 font-heading text-lg font-bold text-white">
+          <h4 className="mt-3 font-heading text-lg font-bold text-foreground">
             {item.title}
           </h4>
         </div>
