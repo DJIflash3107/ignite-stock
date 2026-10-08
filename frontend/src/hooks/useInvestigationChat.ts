@@ -57,7 +57,12 @@ function makeLocalMessage(
 function toDisplayMessages(messages: Message[]): ChatMessage[] {
   return messages
     .filter((m) => m.role === 'user' || m.role === 'assistant')
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    .sort((a, b) => {
+      const byTime = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      if (byTime !== 0) return byTime;
+      if (a.role !== b.role) return a.role === 'user' ? -1 : 1;
+      return a.id.localeCompare(b.id);
+    });
 }
 
 export interface UseInvestigationChatResult {

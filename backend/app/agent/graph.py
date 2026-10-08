@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
-from datetime import date
+from datetime import date, timedelta
 import json
 import logging
 from typing import Any
@@ -242,11 +242,13 @@ async def _persist_investigation(
 
         # 6. Save Messages if conversation is active
         if conversation_id:
+            user_created_at = utc_now()
             user_msg = Message(
                 conversation_id=conversation_id,
                 role=MessageRole.USER.value,
                 content=question,
                 meta_data={"investigation_id": str(investigation.id)},
+                created_at=user_created_at,
             )
             agent_msg = Message(
                 conversation_id=conversation_id,
@@ -257,6 +259,7 @@ async def _persist_investigation(
                     "confidence": overall_confidence.value,
                     "ticker": ticker,
                 },
+                created_at=user_created_at + timedelta(milliseconds=1),
             )
             db.add(user_msg)
             db.add(agent_msg)

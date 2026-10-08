@@ -44,7 +44,7 @@ export const EvidenceCard: React.FC<EvidenceCardProps> = ({ item }) => {
 
   return (
     <article className="rounded-[0.25rem] border border-border bg-secondary p-5">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info" className="font-mono">

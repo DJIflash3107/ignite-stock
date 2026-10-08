@@ -28,7 +28,7 @@ export const InvestigationAiPage: React.FC = () => {
   const ticker = detail.investigation?.company_ticker ?? null;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col gap-4">
+    <div className="flex flex-col gap-4 lg:h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="flex shrink-0 flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
@@ -65,7 +65,10 @@ export const InvestigationAiPage: React.FC = () => {
       {/* Two-pane workspace */}
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* Left: conversation */}
-        <section className="flex min-h-0 flex-col" aria-label="AI conversation">
+        <section
+          className="flex h-[calc(100dvh-13rem)] flex-col lg:h-auto lg:min-h-0"
+          aria-label="AI conversation"
+        >
           <ConversationPanel chat={chat} investigationId={id ?? ''} />
         </section>
 
