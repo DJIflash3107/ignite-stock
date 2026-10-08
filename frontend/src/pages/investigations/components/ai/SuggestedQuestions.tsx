@@ -21,14 +21,14 @@ export const SuggestedQuestions: React.FC<SuggestedQuestionsProps> = ({
   onSelect,
   disabled = false,
 }) => (
-  <div className="flex flex-wrap gap-2">
+  <div className="flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-scroll">
     {SUGGESTED_QUESTIONS.map((question) => (
       <button
         key={question}
         type="button"
         disabled={disabled}
         onClick={() => onSelect(question)}
-        className="flex items-center gap-2 rounded-[0.25rem] border border-border bg-secondary-light px-3 py-2 text-left text-sm text-secondary-foreground transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50"
+        className="flex items-center gap-2 rounded-[0.25rem] border border-border bg-secondary-light px-3 py-2 text-left text-sm text-secondary-foreground transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50 max-md:text-nowrap"
       >
         <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span>{question}</span>
